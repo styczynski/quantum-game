@@ -1,5 +1,5 @@
-import { initialize } from './render/render';
+import { Renderer } from './render/render';
 
 window.onload = function () {
-    initialize(document.getElementById("root"));
+    new Renderer().install(document.getElementById("root"));
 }
