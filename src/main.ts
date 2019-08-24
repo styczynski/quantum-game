@@ -1,4 +1,5 @@
-import { Greeter } from './greeter';
+import { initialize } from './render/render';
 
-const g = new Greeter('Juri');
-g.greet();
+window.onload = function () {
+    initialize(document.getElementById("root"));
+}
