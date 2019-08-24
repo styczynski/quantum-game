@@ -1,32 +1,10 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-
-# Logs and databases #
-######################
-*.log
-*.sql
-*.sqlite
-
-# OS generated files #
-######################
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-.project
-*.sublime-*
-
-# Folders #
-######################
+.idea
 node_modules
-
-bin/traviso.dev.js.map
+src/**/*.js
+src/**/*.js.map
+typings
+dist
+coverage
+ts-out
+npm-debug.log
+debug.log
