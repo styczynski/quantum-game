@@ -8,7 +8,8 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "jsx": "react"
   },
   "include": [
     "src/**/*",

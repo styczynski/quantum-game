@@ -8,7 +8,7 @@ module.exports = {
     context: ROOT,
 
     entry: {
-        'main': './main.ts'
+        'main': './main.tsx'
     },
     
     output: {
@@ -17,7 +17,7 @@ module.exports = {
     },
 
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts', '.js', '.tsx', '.jsx'],
         modules: [
             ROOT,
             'node_modules'
@@ -36,7 +36,7 @@ module.exports = {
             },
             {
                 enforce: 'pre',
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 exclude: /node_modules/,
                 use: 'tslint-loader'
             },
@@ -45,7 +45,7 @@ module.exports = {
             * LOADERS
             *****************/
             {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 exclude: [ /node_modules/ ],
                 use: 'awesome-typescript-loader'
             },
