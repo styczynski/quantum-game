@@ -50,6 +50,9 @@ import LabWallImg2 from './assets/traviso/map/objects/o_lab_wall3.png';
 import LabWallImg3 from './assets/traviso/map/objects/o_lab_wall4.png';
 import LabWallImg4 from './assets/traviso/map/objects/o_lab_wall5.png';
 
+import TilePartImg0 from './assets/traviso/map/tiles/t_lab_floor_part0.png';
+import TilePartImg1 from './assets/traviso/map/tiles/t_lab_floor_part1.png';
+import TilePartImg2 from './assets/traviso/map/tiles/t_lab_floor_part2.png';
 
 import TileImg0 from './assets/traviso/map/tiles/t_lab_floor0.png';
 import TileImg1 from './assets/traviso/map/tiles/t_lab_floor1.png';
@@ -65,6 +68,9 @@ const mapData = {
         "3":  { "movable": true,  "path": TileImg2 },
         "4":  { "movable": true,  "path": TileImg3 },
         "5":  { "movable": true,  "path": TileImg4 },
+        "6":  { "movable": true, "path": TilePartImg0 },
+        "7":  { "movable": true, "path": TilePartImg1 },
+        "8":  { "movable": true, "path": TilePartImg2 },
     },
     "objects": {
         "101": {
@@ -178,10 +184,10 @@ const mapData = {
     "initialControllableLocation": { "columnIndex": 2, "rowIndex": 3, "controllableId": "3" },
     "tileHighlightImage": { "path": TileHighlightImg },
     "groundMap": [
-        { "row": "1 ,1 ,1 ,1" },
+        { "row": "6 ,6 ,6 ,6" },
         { "row": "1 ,1 ,2 ,3" },
-        { "row": "1 ,2 ,1 ,5" },
-        { "row": "1 ,1 ,4 ,1" },
+        { "row": "1 ,2 ,4 ,5" },
+        { "row": "7 ,7 ,7 ,8" },
     ],
     "objectsMap": [
         { "row": "101 ,102 ,105 ,104" },
