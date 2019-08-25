@@ -4,7 +4,23 @@ import ReactDOM from 'react-dom';
 import * as PIXI from 'pixi.js';
 import { TRAVISO } from './traviso.js';
 
-import HeroImg from './assets/traviso/characters/hero_stand_se_0001.png';
+import HeroStill0Img from './assets/traviso/hero/hero_still0.png';
+import HeroStill0Img_0 from './assets/traviso/hero/hero_still0_0.png';
+import HeroStill0Img_1 from './assets/traviso/hero/hero_still0_1.png';
+import HeroStill0Img_2 from './assets/traviso/hero/hero_still0_2.png';
+
+import HeroStill1Img from './assets/traviso/hero/hero_still1.png';
+import HeroStill1Img_0 from './assets/traviso/hero/hero_still1_0.png';
+import HeroStill1Img_1 from './assets/traviso/hero/hero_still1_1.png';
+import HeroStill1Img_2 from './assets/traviso/hero/hero_still1_2.png';
+
+import HeroStill2Img from './assets/traviso/hero/hero_still2.png';
+import HeroStill2Img_0 from './assets/traviso/hero/hero_still2_0.png';
+import HeroStill2Img_1 from './assets/traviso/hero/hero_still2_1.png';
+
+import HeroStill3Img from './assets/traviso/hero/hero_still3.png';
+import HeroStill3Img_0 from './assets/traviso/hero/hero_still3_0.png';
+import HeroStill3Img_1 from './assets/traviso/hero/hero_still3_1.png';
 
 import TileImgS1 from './assets/traviso/map/tiles/t_s_1.png';
 import TileImgS2 from './assets/traviso/map/tiles/t_s_2.png';
@@ -32,6 +48,7 @@ import LabWallImg0 from './assets/traviso/map/objects/o_lab_wall1.png';
 import LabWallImg1 from './assets/traviso/map/objects/o_lab_wall2.png';
 import LabWallImg2 from './assets/traviso/map/objects/o_lab_wall3.png';
 import LabWallImg3 from './assets/traviso/map/objects/o_lab_wall4.png';
+import LabWallImg4 from './assets/traviso/map/objects/o_lab_wall5.png';
 
 
 import TileImg0 from './assets/traviso/map/tiles/t_lab_floor0.png';
@@ -66,25 +83,63 @@ const mapData = {
             "movable": false, "interactive": false, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
             "visuals": { "idle": { "frames": [ { "path": LabWallImg3 } ] } }
         },
+        "105": {
+            "movable": false, "interactive": false, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
+            "visuals": { "idle": { "frames": [ { "path": LabWallImg4 } ] } }
+        },
         "3": {
             "movable": true,  "interactive": false, "rowSpan": 1, "columnSpan": 1, "noTransparency": true,  "floor": false,
             "visuals": {
                 "idle": {
                     "frames": [
-                        { "path": HeroImg },
+                        { "path": HeroStill0Img },
                     ]
                 },
-                "idle_s": {
+                "idle_n": {
                     "frames": [
-                        { "path": HeroImg },
+                        { "path": HeroStill1Img },
                     ]
                 },
-                "idle_sw": { "path": HeroImg, "startIndex": 1, "numberOfFrames": 1, "extension": "png" },
-                "flip": {
+                "idle_w": {
                     "frames": [
-                        { "path": HeroImg}
+                        { "path": HeroStill1Img },
                     ]
-                }
+                },
+                "idle_e": {
+                    "frames": [
+                        { "path": HeroStill1Img },
+                    ]
+                },
+                "move_nw": {
+                    "frames": [
+                        { "path": HeroStill3Img },
+                        { "path": HeroStill3Img_0 },
+                        { "path": HeroStill3Img_1 },
+                    ]
+                },
+                "move_ne": {
+                    "frames": [
+                        { "path": HeroStill2Img },
+                        { "path": HeroStill2Img_0 },
+                        { "path": HeroStill2Img_1 },
+                    ]
+                },
+                "move_sw": {
+                    "frames": [
+                        { "path": HeroStill0Img },
+                        { "path": HeroStill0Img_0 },
+                        { "path": HeroStill0Img_1 },
+                        { "path": HeroStill0Img_2 },
+                    ]
+                },
+                "move_se": {
+                    "frames": [
+                        { "path": HeroStill1Img },
+                        { "path": HeroStill1Img_0 },
+                        { "path": HeroStill1Img_1 },
+                        { "path": HeroStill1Img_2 },
+                    ]
+                },
             }
         },
         "5": {
@@ -120,7 +175,7 @@ const mapData = {
             "visuals": { "idle": { "frames": [ { "path": ObjectBoxesImg0 } ] } }
         },
     },
-    "initialControllableLocation": { "columnIndex": 3, "rowIndex": 3, "controllableId": "3" },
+    "initialControllableLocation": { "columnIndex": 2, "rowIndex": 3, "controllableId": "3" },
     "tileHighlightImage": { "path": TileHighlightImg },
     "groundMap": [
         { "row": "1 ,1 ,1 ,1" },
@@ -129,10 +184,10 @@ const mapData = {
         { "row": "1 ,1 ,4 ,1" },
     ],
     "objectsMap": [
-        { "row": "101 ,101 ,102 ,104" },
+        { "row": "101 ,102 ,105 ,104" },
         { "row": "0 ,0 ,0 ,103" },
         { "row": "0 ,0 ,0 ,103" },
-        { "row": "0 ,0 ,0 ,3" },
+        { "row": "0 ,0 ,3 ,103" },
     ]
 };
 
