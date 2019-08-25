@@ -40,6 +40,7 @@
     "karma-jasmine": "1.1.2",
     "karma-phantomjs-launcher": "1.0.4",
     "karma-webpack": "3.0.0",
+    "pixi.js": "^5.1.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "source-map-loader": "0.2.3",
