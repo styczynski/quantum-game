@@ -34,6 +34,7 @@
     "@types/styled-components": "^4.1.18",
     "awesome-typescript-loader": "5.2.0",
     "camera-controls": "^1.14.0",
+    "deep-clone": "^3.0.3",
     "file-loader": "^4.2.0",
     "jasmine-core": "3.1.0",
     "karma": "2.0.4",
