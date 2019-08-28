@@ -5,6 +5,10 @@ import LabWallImg1 from '../../assets/traviso/map/objects/o_lab_wall2.png';
 import LabWallImg2 from '../../assets/traviso/map/objects/o_lab_wall3.png';
 import LabWallImg3 from '../../assets/traviso/map/objects/o_lab_wall4.png';
 import LabWallImg4 from '../../assets/traviso/map/objects/o_lab_wall5.png';
+import { Game } from "../../Game";
+import ParticleSparkImg from "../../assets/traviso/particle/p_spark.png";
+
+import * as PIXI from 'pixi.js';
 
 export enum WallType {
     ASC_CABLES,

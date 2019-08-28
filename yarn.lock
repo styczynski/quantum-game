@@ -5465,6 +5465,11 @@ pinkie@^2.0.0:
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
   integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
 
+pixi-dust@^4.5.3:
+  version "4.5.3"
+  resolved "https://registry.yarnpkg.com/pixi-dust/-/pixi-dust-4.5.3.tgz#d4d495fd7ab399dce5e75d42dcb4bd485efbc424"
+  integrity sha512-VWPXuIJ2HQbW9qlB0jJWresh9upKtlx8epgt7L8VGMpkgKsYVM5LMTsfrKD2rnbJXsfKiJUhGPEJ4PxEzJS7Ow==
+
 pixi.js@^5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-5.1.2.tgz#5c05c2f7ca9f14bbaf02b33c645a3f13ba0c4200"

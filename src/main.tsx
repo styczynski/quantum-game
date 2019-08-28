@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import {Floors, FloorTileType, Game, Players, Walls, WallType, Lasers} from './Game';
+import {LaserLights} from "./game/objects/LaserLight";
 
 window.onload = () => {
     ReactDOM.render(
@@ -34,6 +35,7 @@ window.onload = () => {
                 Floors.createTile({type: FloorTileType.DIRTY, x: 3, y: 2}),
 
                 Lasers.createObject({x: 2, y: 3}),
+                LaserLights.createObject({}),
 
                 Walls.createObject({x: 0, y: 0, type: WallType.ASC_CABLES }),
                 Walls.createObject({x: 1, y: 0, type: WallType.ASC_CABLES }),

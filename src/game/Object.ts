@@ -24,11 +24,12 @@ export interface TravisoObjectSpec {
     worldAlpha: number;
 }
 
-export interface ObjectSpec {
+interface ObjectSpec {
     position: {
         x: number;
         y: number;
     };
+    virtual?: boolean;
     globalMapOptions?: Partial<GameMapData>;
     movable: boolean;
     interactive: boolean;
@@ -37,6 +38,7 @@ export interface ObjectSpec {
     noTransparency: boolean;
     floor: boolean;
     onSelect?: (obj: TravisoObjectSpec, game: Game) => void;
+    onRender?: (obj: TravisoObjectSpec[], game: Game) => void;
     visuals: {
         idle: GameMapDataVisualsSpec;
         idle_n?: GameMapDataVisualsSpec;

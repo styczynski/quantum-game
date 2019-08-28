@@ -1,15 +1,20 @@
 import React from 'react';
 import * as PIXI from 'pixi.js';
+// @ts-ignore
+import Dust from 'pixi-dust';
 import { TRAVISO } from './traviso.js';
 
 import deepClone from 'deep-clone';
 
 import { GameTileSpec } from './game/Tile';
 import { GameObjectSpec } from './game/Object';
+import { GameVirtualObjectSpec } from './game/VirtualObject';
 
 export * from './game/index';
 
-export type GameEntitySpec = GameTileSpec | GameObjectSpec;
+import ParticleSparkImg from './assets/traviso/particle/p_spark.png';
+
+export type GameEntitySpec = GameTileSpec | GameObjectSpec | GameVirtualObjectSpec<{}>;
 
 const DEFAULT_GAME_MAP_DATA: GameMapData = {
     tiles: {},
@@ -83,10 +88,12 @@ export interface GameProps {
 export class Game extends React.Component<GameProps> {
 
     canvas: HTMLCanvasElement;
+    pixiRoot: PIXI.Application;
     engine: any;
 
     tilesTypeMapping: Map<string, GameTileSpec>;
     objectsTypeMapping: Map<string, GameObjectSpec>;
+    virtualObjects: Map<string, Set<GameVirtualObjectSpec<{}>>>;
 
     constructor(props: GameProps) {
         super(props);
@@ -129,6 +136,17 @@ export class Game extends React.Component<GameProps> {
 
         const tiles = entities.filter((entity: GameEntitySpec): entity is GameTileSpec => entity.type === "TILE");
         const objects = entities.filter((entity: GameEntitySpec): entity is GameObjectSpec => entity.type === "OBJECT");
+        const virtualObjects = entities.filter((entity: GameEntitySpec): entity is GameVirtualObjectSpec<{}> => entity.type === "VIRTUAL_OBJECT");
+
+        this.virtualObjects = new Map();
+        for (const obj of virtualObjects) {
+            let objGroup = this.virtualObjects.get(obj.name);
+            if (!objGroup) {
+                objGroup = new Set();
+                this.virtualObjects.set(obj.name, objGroup);
+            }
+            objGroup.add(obj);
+        }
 
         let tileFreeTypeNo = 1;
         let objectFreeTypeNo = 1;
@@ -276,7 +294,7 @@ export class Game extends React.Component<GameProps> {
         PIXI.settings.ROUND_PIXELS = false;
 
         ////// Here, we initialize the pixi application
-        const pixiRoot = new PIXI.Application({
+        this.pixiRoot = new PIXI.Application({
             width: 800,
             height: 600,
             backgroundColor : 0x6BACDE,
@@ -287,7 +305,7 @@ export class Game extends React.Component<GameProps> {
         });
 
         // add the renderer view element to the DOM
-        document.body.appendChild(pixiRoot.view);
+        document.body.appendChild(this.pixiRoot.view);
 
         ////// Here, we create our traviso instance and add on top of pixi
 
@@ -295,7 +313,7 @@ export class Game extends React.Component<GameProps> {
         const instanceConfig: any = {
             mapDataPath: this.generateMapData(), // the path to the json file that defines map data, required
             assetsToLoad: [""], // array of paths to the assets that are desired to be loaded by traviso, no need to use if assets are already loaded to PIXI cache, default null
-            pixiRoot: pixiRoot,
+            pixiRoot: this.pixiRoot,
             objectSelectCallback: (obj: any) => {
                 const objSpec = this.objectsTypeMapping.get(obj.type.toString());
                 console.log("SELECTED TYPE "+obj.type);
@@ -308,7 +326,97 @@ export class Game extends React.Component<GameProps> {
 
         console.log(JSON.stringify(this.generateMapData(), null, 2));
         this.engine = TRAVISO.getEngineInstance(instanceConfig);
-        pixiRoot.stage.addChild(this.engine);
+        this.pixiRoot.stage.addChild(this.engine);
+
+
+        ///////////////////////////////////////////////////////////////////////////////
+
+        (PIXI as any).particles = {
+            ParticleContainer: PIXI.ParticleContainer,
+        };
+        (window as any).PIXI = PIXI;
+        let d = new Dust(PIXI);
+
+        //Create the `ParticleContainer` and add it to the `stage`
+        let starContainer = new PIXI.ParticleContainer(
+            15000,
+            {
+                rotation: true,
+                uvs: true,
+            }
+        );
+        this.pixiRoot.stage.addChild(starContainer);
+
+        let stars: any[] = [];
+        let starStep = 0;
+        //Create star particles and add them to the `starContainer`
+        const runStars = () => {
+
+            const tx = 3;
+            const x = this.engine.getTilePosXFor(tx, -1);
+            const y = this.engine.getTilePosYFor(tx, -1);
+
+            console.log({
+                x: 25 + x + this.engine.mapContainer.position.x,
+                y: 50 + (-y) + this.engine.mapContainer.position.y,
+            })
+            starStep = 0;
+            stars = d.create(
+                25 + x + this.engine.mapContainer.position.x,
+                50 + (-y) + this.engine.mapContainer.position.y,
+                () => PIXI.Sprite.from(ParticleSparkImg),
+                starContainer,
+                5,
+                0.4,
+                true,
+                -30, -25,
+            );
+
+            setTimeout(runStars, 2500);
+        };
+        setTimeout(runStars, 500);
+
+        for (const [objName, objSpecs] of this.virtualObjects.entries()) {
+            const spec = [...objSpecs.values()][0];
+            if (spec.onInit) {
+                spec.onInit(this);
+            }
+        }
+
+        const gameLoop = () => {
+            requestAnimationFrame(gameLoop);
+
+            for (const [objType, objSpec] of this.objectsTypeMapping.entries()) {
+                const objs = [];
+                if (objSpec.onRender) {
+                    for (const column of this.engine.objArray) {
+                        for (const row of column) {
+                            if (row) {
+                                for (const item of row) {
+                                    if (item && item.type && item.type.toString() === objType) objs.push(item);
+                                }
+                            }
+                        }
+                    }
+                    objSpec.onRender(objs, this);
+                }
+            }
+
+            for (const [objName, objSpecs] of this.virtualObjects.entries()) {
+                const spec = [...objSpecs.values()][0];
+                if (spec.onRender) {
+                    spec.onRender([...objSpecs], this);
+                }
+            }
+
+            stars.forEach(star => {
+                star.alpha = 1-starStep*0.05;
+            });
+            ++starStep;
+
+            d.update();
+        }
+        gameLoop();
     }
 
     componentDidMount(): void {
