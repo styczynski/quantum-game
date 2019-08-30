@@ -1,8 +1,9 @@
 import React from 'react';
 import * as PIXI from 'pixi.js';
+import { TRAVISO } from './traviso.js';
+
 // @ts-ignore
 import Dust from 'pixi-dust';
-import { TRAVISO } from './traviso.js';
 
 import deepClone from 'deep-clone';
 
@@ -105,6 +106,7 @@ export class Game extends React.Component<GameProps> {
     coordsShiftY: number;
     mapW: number;
     mapH: number;
+    dust: any;
 
 
     constructor(props: GameProps) {
@@ -379,17 +381,7 @@ export class Game extends React.Component<GameProps> {
             ParticleContainer: PIXI.ParticleContainer,
         };
         (window as any).PIXI = PIXI;
-        let d = new Dust(PIXI);
-
-        //Create the `ParticleContainer` and add it to the `stage`
-        let starContainer = new PIXI.ParticleContainer(
-            15000,
-            {
-                rotation: true,
-                uvs: true,
-            }
-        );
-        this.pixiRoot.stage.addChild(starContainer);
+        this.dust = new Dust(PIXI);
 
 
         /*const lighting = new (PIXI as any).display.Layer();
@@ -414,36 +406,6 @@ export class Game extends React.Component<GameProps> {
         (lightbulb as any).parentLayer = lighting;// <-- try comment it
         this.pixiRoot.stage.addChild(lightbulb);*/
 
-
-        let stars: any[] = [];
-        let starStep = 0;
-        //Create star particles and add them to the `starContainer`
-        const runStars = () => {
-
-            const tx = 3;
-            const x = this.engine.getTilePosXFor(tx, -1);
-            const y = this.engine.getTilePosYFor(tx, -1);
-
-            console.log({
-                x: 25 + x + this.engine.mapContainer.position.x,
-                y: 50 + (-y) + this.engine.mapContainer.position.y,
-            })
-            starStep = 0;
-            stars = d.create(
-                25 + x + this.engine.mapContainer.position.x,
-                50 + (-y) + this.engine.mapContainer.position.y,
-                () => PIXI.Sprite.from(ParticleSparkImg),
-                starContainer,
-                5,
-                0.4,
-                true,
-                -30, -25,
-            );
-
-            setTimeout(runStars, 2500);
-        };
-        setTimeout(runStars, 500);
-
         for (const [_, objects] of this.objectsPositionMapping.entries()) {
             for (const object of objects) {
                 object.onPostConstruct(this);
@@ -460,12 +422,7 @@ export class Game extends React.Component<GameProps> {
                 }
             }
 
-            stars.forEach(star => {
-                star.alpha = 1-starStep*0.05;
-            });
-            ++starStep;
-
-            d.update();
+            this.dust.update();
         }
         gameLoop();
     }

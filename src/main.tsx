@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {FloorTile, FloorTileType, Game, Laser, Mirror, MirrorType, Player, Wall, WallType} from './Game';
+import {FloorTile, FloorTileType, Game, Laser, Mirror, MirrorType, Player, Wall, WallType, Sparks} from './Game';
 import {LaserLight} from "./game/objects/LaserLight";
 
 window.onload = () => {
@@ -53,6 +53,8 @@ window.onload = () => {
 
                 new Wall({position: [5, 1], type: WallType.DESC}),
                 new Wall({position: [5, 2], type: WallType.DESC}),
+
+                new Sparks({position: [3, 0], offset: [-30, 20]}),
             ]}
         />
         , document.getElementById('root'));
