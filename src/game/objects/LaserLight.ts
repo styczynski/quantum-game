@@ -1,5 +1,6 @@
 import { VirtualObjectFactory, GameVirtualObjectSpec } from "../VirtualObject";
 import * as PIXI from "pixi.js";
+import {Game} from "../../Game";
 
 export interface LaserLightOptions {
 
@@ -7,6 +8,73 @@ export interface LaserLightOptions {
 
 export interface LaserLightState {
     p: number;
+}
+
+function getDrawPosition({
+    p, points, totalDist, game, amplitudes, i,
+} : {
+    points: [number, number][];
+    p: number;
+    totalDist: number;
+    amplitudes: number[];
+    i: number;
+    game: Game;
+}): {
+    point: [number, number];
+    normalPoint: [number, number];
+    nonNormalPoint: [number, number];
+    currentDist: number;
+} {
+    let lastPoint = points[0];
+    let shiftLast: [number, number] = [0, 0];
+    let currentDist = 0;
+    for (const point of points) {
+        const dist = Math.sqrt((point[0] - lastPoint[0]) * (point[0] - lastPoint[0]) + (point[1] - lastPoint[1]) * (point[1] - lastPoint[1]));
+        let pVal = Math.min(1, Math.max(0, (totalDist * p - currentDist) / dist));
+
+        const shift: [number, number] = [10, -27];
+        if (pVal > 0 && pVal < 1) {
+
+            const lineFromX = shiftLast[0] + game.engine.mapContainer.position.x + game.engine.getTilePosXFor(lastPoint[0], lastPoint[1]);
+            const lineFromY = shiftLast[1] + game.engine.mapContainer.position.y - game.engine.getTilePosYFor(lastPoint[0], lastPoint[1]);
+
+            const lineToX = shift[0] + game.engine.mapContainer.position.x + game.engine.getTilePosXFor(point[0], point[1]);
+            const lineToY = shift[1] + game.engine.mapContainer.position.y - game.engine.getTilePosYFor(point[0], point[1]);
+
+            const currentPoint: [number, number] = [lineFromX + (lineToX - lineFromX) * pVal, lineFromY + (lineToY - lineFromY) * pVal];
+
+            const normalYCoeff = -(lineToX - lineFromX) / (lineToY - lineFromY);
+
+            const tAmp = Math.sin((currentDist + dist * pVal)/100 * Math.PI * 80);
+            const dAmp = amplitudes[(tAmp < 0) ? (amplitudes.length - i) : (i)];
+
+            const normalRot = 40;
+            const normalXShift = Math.cos(Math.atan(normalYCoeff) + (normalRot / 180 * Math.PI)) * dAmp * tAmp;
+            const normalYShift = Math.sin(Math.atan(normalYCoeff) + (normalRot / 180 * Math.PI)) * dAmp * tAmp;
+
+            const nonNormalYCoeff = -(lineToX - lineFromX) / (lineToY - lineFromY);
+            const nonNormalRot = -40;
+            const nonNormalXShift = -Math.cos(Math.atan(nonNormalYCoeff) + (nonNormalRot / 180 * Math.PI)) * dAmp * tAmp;
+            const nonNormalYShift = -Math.sin(Math.atan(nonNormalYCoeff) + (nonNormalRot / 180 * Math.PI)) * dAmp * tAmp;
+
+            return {
+                point: currentPoint,
+                normalPoint: [currentPoint[0] - normalXShift, currentPoint[1] - normalYShift],
+                nonNormalPoint: [currentPoint[0] - nonNormalXShift, currentPoint[1] - nonNormalYShift],
+                currentDist: currentDist + dist * pVal,
+            };
+        }
+
+        lastPoint = point;
+        shiftLast = shift;
+        currentDist += dist;
+    }
+    return {
+        point: points[0],
+        normalPoint: points[0],
+        nonNormalPoint: points[0],
+        currentDist: 0,
+    };
 }
 
 export class LaserLight extends VirtualObjectFactory<LaserLightOptions, LaserLightState> {
@@ -27,13 +95,16 @@ export class LaserLight extends VirtualObjectFactory<LaserLightOptions, LaserLig
             onRender: (objs, game) => {
                 this.graphics.clear();
                 for (const obj of objs) {
-                    if (obj.state.p < 1.00)  // while we didn't fully draw the line
+                    if (obj.state.p < 1.00) { // while we didn't fully draw the line
                         obj.state.p += 0.01; // increase the "progress" of the animation
+                    } else {
+                        obj.state.p = 0;
+                    }
 
-                    const points = [
-                        [2,3,10,-27],
-                        [4,3,10,-27],
-                        [4,0,10,-27],
+                    const points: [number, number][] = [
+                        [2,3],
+                        [4,3],
+                        [4,0],
                     ];
 
                     let lastPoint = points[0];
@@ -43,26 +114,51 @@ export class LaserLight extends VirtualObjectFactory<LaserLightOptions, LaserLig
                         lastPoint = point;
                     }
 
-                    lastPoint = points[0];
-                    let currentDist = 0;
-                    for (const point of points) {
-                        const dist = Math.sqrt((point[0]-lastPoint[0])*(point[0]-lastPoint[0])+(point[1]-lastPoint[1])*(point[1]-lastPoint[1]));
-                        let pVal = Math.min(1, Math.max(0, (totalDist * obj.state.p - currentDist) / dist));
+                    const amps = [
+                        0,
+                        1.0673664307580015,
+                        3.999999999999999,
+                        5.877852522924732,
+                        7.431448254773942,
+                        8.090169943749475,
+                        9.135454576426008,
+                        9.781476007338057,
+                        10,
+                        9.945218953682733,
+                        9.781476007338057,
+                        9.510565162951536,
+                        9.13545457642601,
+                        8.660254037844387,
+                        8.090169943749475,
+                        7.431448254773945,
+                        6.691306063588583,
+                        5.877852522924733,
+                        4.999999999999999,
+                        4.067366430758001,
+                        3.090169943749475,
+                        2.079116908177593,
+                        1.0452846326765328,
+                        0,
+                    ];
 
-                        const lineFromX = lastPoint[2] + game.engine.mapContainer.position.x + game.engine.getTilePosXFor(lastPoint[0], lastPoint[1]);
-                        const lineFromY = lastPoint[3] + game.engine.mapContainer.position.y - game.engine.getTilePosYFor(lastPoint[0], lastPoint[1]);
+                    const l = amps.length;
+                    for (let i = 0; i <= l; ++i) {
+                        const { point, normalPoint, nonNormalPoint } = getDrawPosition({
+                            points,
+                            p: obj.state.p + (0.01 / totalDist)*i,
+                            totalDist,
+                            game,
+                            i,
+                            amplitudes: amps,
+                        });
 
-                        const lineToX = point[2] + game.engine.mapContainer.position.x + game.engine.getTilePosXFor(point[0], point[1]);
-                        const lineToY = point[3] + game.engine.mapContainer.position.y - game.engine.getTilePosYFor(point[0], point[1]);
+                        this.graphics.lineStyle(1, 0xCC3331 + 0x000009 * 0);
+                        this.graphics.moveTo(point[0], point[1]);
+                        this.graphics.lineTo(normalPoint[0], normalPoint[1]);
 
-                        this.graphics.lineStyle(2, 0xCC3333);
-                        this.graphics.moveTo(lineFromX, lineFromY);
-                        // This is the length of the line. For the x-position, that's 600-30 pixels - so your line was 570 pixels long.
-                        // Multiply that by p, making it longer and longer. Finally, it's offset by the 30 pixels from your moveTo above. So, when p is 0, the line moves to 30 (not drawn at all), and when p is 1, the line moves to 600 (where it was for you). For y, it's the same, but with your y values.
-                        this.graphics.lineTo(lineFromX + (lineToX - lineFromX)*pVal, lineFromY + (lineToY - lineFromY)*pVal);
-
-                        lastPoint = point;
-                        currentDist += dist;
+                        this.graphics.lineStyle(1, 0xAA1111+ 0x090000 * 0);
+                        this.graphics.moveTo(point[0], point[1]);
+                        this.graphics.lineTo(nonNormalPoint[0], nonNormalPoint[1]);
                     }
                 }
             },

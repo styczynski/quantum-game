@@ -93,6 +93,7 @@ export class Game extends React.Component<GameProps> {
     canvas: HTMLCanvasElement;
     pixiRoot: PIXI.Application;
     engine: any;
+    objectsQuickMapping: Map<string, GameObjectSpec> = new Map();
 
     tilesTypeMapping: Map<string, GameTileSpec>;
     objectsTypeMapping: Map<string, GameObjectSpec>;
@@ -102,6 +103,11 @@ export class Game extends React.Component<GameProps> {
         super(props);
         this.initialize = this.initialize.bind(this);
         this.generateMapData = this.generateMapData.bind(this);
+    }
+
+    getObject(position: { x: number; y: number }) {
+        const obj = this.objectsQuickMapping.get(`${position.x}x${position.y}`);
+        return obj;
     }
 
     generateMapData(): GameMapData {
@@ -161,7 +167,7 @@ export class Game extends React.Component<GameProps> {
         this.objectsTypeMapping = new Map();
 
         const tilesQuickMapping: Map<string, GameTileSpec> = new Map();
-        const objectsQuickMapping: Map<string, GameObjectSpec> = new Map();
+        this.objectsQuickMapping = new Map();
 
         tiles.forEach(tile => {
            tilesQuickMapping.set(`${tile.position.x}x${tile.position.y}`, tile);
@@ -169,7 +175,7 @@ export class Game extends React.Component<GameProps> {
 
         objects.forEach(obj => {
             console.log(`Add player key = ${obj.position.x}x${obj.position.y}`);
-            objectsQuickMapping.set(`${obj.position.x}x${obj.position.y}`, obj);
+            this.objectsQuickMapping.set(`${obj.position.x}x${obj.position.y}`, obj);
         });
 
         const mapW = maxX - minX;
@@ -208,9 +214,9 @@ export class Game extends React.Component<GameProps> {
                     rowTilesBuf.push("0");
                 }
 
-                if (objectsQuickMapping.has(key)) {
+                if (this.objectsQuickMapping.has(key)) {
                     console.log(`player match => ${key}`)
-                    const specs = objectsQuickMapping.get(key);
+                    const specs = this.objectsQuickMapping.get(key);
                     const specsHash = JSON.stringify({
                         vis: specs.visuals,
                     });
@@ -412,6 +418,7 @@ export class Game extends React.Component<GameProps> {
 
         const gameLoop = () => {
             requestAnimationFrame(gameLoop);
+            //setTimeout(gameLoop, 90);
 
             for (const [objType, objSpec] of this.objectsTypeMapping.entries()) {
                 const objs = [];

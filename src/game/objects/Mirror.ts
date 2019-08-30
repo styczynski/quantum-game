@@ -42,7 +42,11 @@ export class Mirror extends ObjectFactory<MirrorOptions> {
                 x: options.x,
                 y: options.y,
             },
-            "movable": false, "interactive": false, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
+            onSelect(obj) {
+              console.log(obj);
+            },
+
+            "movable": false, "interactive": true, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
                 "visuals": { "idle": { "frames": [ { "path": this.getImagePath(options) } ] } }
         };
     }
