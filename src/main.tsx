@@ -43,6 +43,7 @@ window.onload = () => {
                 new LaserLight({position: [2, 3]}),
 
                 new Mirror({ position: [4, 3], type: MirrorType.SW }),
+                new Mirror({ position: [9, 9], type: MirrorType.NW }),
 
                 new Wall({position: [0, 0], type: WallType.ASC_CABLES }),
                 new Wall({position: [1, 0], type: WallType.ASC_CABLES }),

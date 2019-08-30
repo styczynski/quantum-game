@@ -62,6 +62,12 @@ export class Mirror extends GameObject<MirrorOptions> {
     }
 
     onSelect(game: Game): void {
-        console.log(this);
+        game.removeObject(this);
+        game.addObjects([
+            new Mirror({
+                ...this.options,
+                //type: MirrorType.NW,
+            })
+        ]);
     }
 }

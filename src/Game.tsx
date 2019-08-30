@@ -136,6 +136,7 @@ export class Game extends React.Component<GameProps> {
     }
 
     private isObjectNewType(a: GameObject<GameObjectOptions>, b: GameObject<GameObjectOptions>) {
+
         return a.getName() !== b.getName()
             || JSON.stringify(a.getTextures()) !== JSON.stringify(b.getTextures())
             || a.getFloorTexture() !== b.getFloorTexture()
@@ -143,21 +144,25 @@ export class Game extends React.Component<GameProps> {
             || a.isMoveable() !== b.isMoveable()
             || a.isInteractive() !== b.isInteractive()
             || a.isFloor() !== b.isFloor()
-            || a.dimensions() !== b.dimensions()
+            || JSON.stringify(a.dimensions()) !== JSON.stringify(b.dimensions())
             || a.hasTransparency() !== b.hasTransparency()
     }
 
     private getTypeForObjectClass(object: GameObject<GameObjectOptions>) {
         let objSpec = this.objectsTypeMapping.get(object.getName());
-
-        console.log(`getTypeForObjectClass(${object.getName()});`);
-
         let addNew = false;
 
         if (objSpec === undefined) {
             addNew = true;
         } else {
-            addNew = this.isObjectNewType(object, objSpec[1]);
+            if (this.isObjectNewType(object, objSpec[1])) {
+                addNew = true;
+                for (const [id, rep] of this.objectsTypeMapping.values()) {
+                    if (!this.isObjectNewType(object, rep) && rep.getName() === object.getName()) {
+                        return id;
+                    }
+                }
+            }
         }
 
         let objID: number = 0;
@@ -169,12 +174,65 @@ export class Game extends React.Component<GameProps> {
                 this.typeTilesMapping.set(objID, this.generateTravisoSpecsForGameObject(object));
             } else if (!object.isVirtual() && !object.isFloor()) {
                 this.typeObjectMapping.set(objID, this.generateTravisoSpecsForGameObject(object));
-                console.log(`PUSH typeObjectMapping`);
             }
         } else {
             objID = objSpec[0];
         }
         return objID;
+    }
+
+    private getObjectPosHash(obj: {pos: [number, number]}) {
+        return `${obj.pos[0]}x${obj.pos[1]}`;
+    }
+
+    removeObject(object: GameObject<GameObjectOptions>) {
+        if (object.gameObject) {
+            this.engine.removeObjectFromLocation(object.gameObject);
+            this.objectsPositionMapping.delete(this.getObjectPosHash({ pos: [object.gameObject.mapPos.r, object.gameObject.mapPos.c] }));
+        }
+        object.gameObject = null;
+    }
+
+    addObjects(objects: GameObject<GameObjectOptions>[]) {
+        const preObjects = objects.map(entity => {
+            return {
+                obj: entity,
+                pos: [
+                    entity.getInitialPosition()[0] + this.coordsShiftX,
+                    entity.getInitialPosition()[1] + this.coordsShiftY,
+                ] as [number, number],
+            };
+        });
+
+        for (const obj of preObjects) {
+            if (obj.obj.isVirtual()) {
+                let objGroup = this.virtualObjects.get(obj.obj.getName());
+                if (!objGroup) {
+                    objGroup = new Set();
+                    this.virtualObjects.set(obj.obj.getName(), objGroup);
+                }
+                objGroup.add(obj.obj);
+            }
+        }
+
+        preObjects.forEach(obj => {
+            let objectsAtPosition = this.objectsPositionMapping.get(this.getObjectPosHash(obj));
+            if (objectsAtPosition === undefined) {
+                objectsAtPosition = new Set();
+                this.objectsPositionMapping.set(this.getObjectPosHash(obj), objectsAtPosition);
+            }
+            objectsAtPosition.add(obj.obj);
+        });
+
+        for (const { obj, pos } of preObjects) {
+            const objID = this.getTypeForObjectClass(obj);
+            console.log("CREATE "+objID);
+            this.engine.mapData.objects[objID.toString()] = this.engine.parseType(this.generateTravisoSpecsForGameObject(obj), objID.toString());
+            this.engine.createAndAddObjectToLocation(objID, {
+                c: pos[1],
+                r: pos[0],
+            });
+        }
     }
 
     generateMapData(objects: GameObject<GameObjectOptions>[]): GameMapData {
@@ -183,8 +241,6 @@ export class Game extends React.Component<GameProps> {
             pos: obj.getInitialPosition(),
             obj,
         }));
-
-        const getObjectPosHash = (obj: {pos: [number, number]}) => `${obj.pos[0]}x${obj.pos[1]}`;
 
         const { maxX, maxY, minX, minY } = preObjects.reduce<{
             maxX: number,
@@ -232,10 +288,10 @@ export class Game extends React.Component<GameProps> {
 
         this.objectsPositionMapping = new Map();
         preObjects.forEach(obj => {
-            let objectsAtPosition = this.objectsPositionMapping.get(getObjectPosHash(obj));
+            let objectsAtPosition = this.objectsPositionMapping.get(this.getObjectPosHash(obj));
             if (objectsAtPosition === undefined) {
                 objectsAtPosition = new Set();
-                this.objectsPositionMapping.set(getObjectPosHash(obj), objectsAtPosition);
+                this.objectsPositionMapping.set(this.getObjectPosHash(obj), objectsAtPosition);
             }
             objectsAtPosition.add(obj.obj);
         });
@@ -251,7 +307,7 @@ export class Game extends React.Component<GameProps> {
             const rowObjectsBuf: string[] = [];
 
             for (let x=0;x<=this.mapW;++x) {
-                const key = getObjectPosHash({pos: [x, y]});
+                const key = this.getObjectPosHash({pos: [x, y]});
                 const objectsAtPosition = this.objectsPositionMapping.get(key);
 
                 if (objectsAtPosition !== undefined) {
@@ -363,9 +419,13 @@ export class Game extends React.Component<GameProps> {
             mapDataPath: this.generateMapData(this.props.entities), // the path to the json file that defines map data, required
             assetsToLoad: [""], // array of paths to the assets that are desired to be loaded by traviso, no need to use if assets are already loaded to PIXI cache, default null
             pixiRoot: this.pixiRoot,
-            objectSelectCallback: (obj: TravisoObjectSpec) => {
-                if (obj.origin) {
-                    obj.origin.onSelect(this);
+            objectSelectCallback: (objSrc: TravisoObjectSpec) => {
+                const objsAtLocation = this.objectsPositionMapping.get(this.getObjectPosHash({ pos: [objSrc.mapPos.c, objSrc.mapPos.r] }));
+                for (const obj of objsAtLocation) {
+                    if (!obj.isVirtual() && !obj.isFloor()) {
+                        obj.onSelect(this);
+                        return;
+                    }
                 }
             },
         };
@@ -411,6 +471,21 @@ export class Game extends React.Component<GameProps> {
                 object.onPostConstruct(this);
             }
         }
+        setTimeout(() => {
+            for (const [_, objects] of this.objectsPositionMapping.entries()) {
+                for (const object of objects) {
+                    const r = object.getInitialPosition()[0];
+                    const c = object.getInitialPosition()[1];
+                    try {
+                        object.gameObject = this.engine.getObjectsAtRowAndColumn(c, r)[0];
+                    } catch (e) {
+                        object.gameObject = null;
+                        console.log(`GET OBJECT FROM ${r} x ${c} failed`);
+                        //throw e;
+                    }
+                }
+            }
+        }, 1500);
 
         const gameLoop = () => {
             requestAnimationFrame(gameLoop);
