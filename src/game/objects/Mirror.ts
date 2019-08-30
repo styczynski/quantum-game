@@ -1,4 +1,4 @@
-import { ObjectFactory, GameObjectSpec } from "../Object";
+import {GameObject, GameObjectOptions, ObjectTexture} from "../Object";
 
 import LabMirrorImg0 from '../../assets/traviso/map/objects/o_lab_mirror0.png';
 import LabMirrorImg1 from '../../assets/traviso/map/objects/o_lab_mirror1.png';
@@ -17,13 +17,11 @@ export enum MirrorType {
     SE
 }
 
-export interface MirrorOptions {
-    x: number;
-    y: number;
+export interface MirrorOptions extends GameObjectOptions {
     type: MirrorType;
 }
 
-export class Mirror extends ObjectFactory<MirrorOptions> {
+export class Mirror extends GameObject<MirrorOptions> {
 
     getImagePath({ type }: MirrorOptions): string {
         switch(type) {
@@ -35,21 +33,35 @@ export class Mirror extends ObjectFactory<MirrorOptions> {
         }
     }
 
-    createObject(options: MirrorOptions): GameObjectSpec {
-        return {
-            type: "OBJECT",
-            position: {
-                x: options.x,
-                y: options.y,
-            },
-            onSelect(obj) {
-              console.log(obj);
-            },
+    isInteractive(): boolean {
+        return true;
+    }
 
-            "movable": false, "interactive": true, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
-                "visuals": { "idle": { "frames": [ { "path": this.getImagePath(options) } ] } }
-        };
+    getFloorTexture(): string {
+        return "";
+    }
+
+    getGlobalOverrides(): any {
+    }
+
+    getName(): string {
+        return "Mirror";
+    }
+
+    getTextures(): ObjectTexture {
+        return { "idle": { "frames": [ { "path": this.getImagePath(this.options) } ] } };
+    }
+
+    onPostConstruct(game: Game): void {
+    }
+
+    onPreDestruct(game: Game): void {
+    }
+
+    onRender(game: Game): void {
+    }
+
+    onSelect(game: Game): void {
+        console.log(this);
     }
 }
-
-export const Mirrors = new Mirror();

@@ -1,4 +1,4 @@
-import { ObjectFactory, GameObjectSpec } from "../Object";
+import {GameObjectOptions, GameObject, ObjectTexture} from "../Object";
 
 import LabWallImg0 from '../../assets/traviso/map/objects/o_lab_wall1.png';
 import LabWallImg1 from '../../assets/traviso/map/objects/o_lab_wall2.png';
@@ -18,13 +18,11 @@ export enum WallType {
     ASC_CABLES_TUNNEL
 }
 
-export interface WallOptions {
-    x: number;
-    y: number;
+export interface WallOptions extends GameObjectOptions {
     type: WallType;
 }
 
-export class Wall extends ObjectFactory<WallOptions> {
+export class Wall extends GameObject<WallOptions> {
 
     getImagePath({ type }: WallOptions): string {
         switch(type) {
@@ -37,17 +35,30 @@ export class Wall extends ObjectFactory<WallOptions> {
         }
     }
 
-    createObject(options: WallOptions): GameObjectSpec {
-        return {
-            type: "OBJECT",
-            position: {
-                x: options.x,
-                y: options.y,
-            },
-            "movable": false, "interactive": false, "rowSpan": 1, "columnSpan": 1, "noTransparency": false, "floor": false,
-                "visuals": { "idle": { "frames": [ { "path": this.getImagePath(options) } ] } }
-        };
+    getFloorTexture(): string {
+        return "";
+    }
+
+    getGlobalOverrides(): any {
+    }
+
+    getName(): string {
+        return "Wall";
+    }
+
+    getTextures(): ObjectTexture {
+        return { "idle": { "frames": [ { "path": this.getImagePath(this.options) } ] } };
+    }
+
+    onPostConstruct(game: Game): void {
+    }
+
+    onPreDestruct(game: Game): void {
+    }
+
+    onRender(game: Game): void {
+    }
+
+    onSelect(game: Game): void {
     }
 }
-
-export const Walls = new Wall();

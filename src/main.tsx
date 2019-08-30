@@ -1,53 +1,58 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {Floors, FloorTileType, Game, Lasers, Mirrors, MirrorType, Players, Walls, WallType} from './Game';
-import {LaserLights} from "./game/objects/LaserLight";
+import {FloorTile, FloorTileType, Game, Laser, Mirror, MirrorType, Player, Wall, WallType} from './Game';
+import {LaserLight} from "./game/objects/LaserLight";
 
 window.onload = () => {
     ReactDOM.render(
         <Game
             entities={[
-                Players.createObject({x: 0, y: 1}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 0, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 1, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 2, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 3, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 4, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_NW, x: 5, y: 0}),
-                Floors.createTile({type: FloorTileType.PARTIAL_SE, x: 5, y: 2}),
-                Floors.createTile({type: FloorTileType.PARTIAL_SE, x: 5, y: 3}),
+                new Player({position: [0,1]}),
+                // new FloorTile({ position: [0,0], type: FloorTileType.DIRTY, }),
+                // new FloorTile({ position: [1,0], type: FloorTileType.DIRTY, }),
+                // new FloorTile({ position: [0,1], type: FloorTileType.DIRTY, }),
+                // new FloorTile({ position: [1,1], type: FloorTileType.DIRTY, }),
+                
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [0 , 0]}),
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [1, 0]}),
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [2, 0]}),
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [3, 0]}),
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [4, 0]}),
+                new FloorTile({type: FloorTileType.PARTIAL_NW, position: [5, 0]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [5, 2]}),
+                new FloorTile({type: FloorTileType.PARTIAL_SE, position: [5, 3]}),
 
-                Floors.createTile({type: FloorTileType.DRAWINGS, x: 0, y: 1}),
-                Floors.createTile({type: FloorTileType.CRACKED, x: 1, y: 1}),
-                Floors.createTile({type: FloorTileType.CLEAN, x: 2, y: 1}),
-                Floors.createTile({type: FloorTileType.DIRTY, x: 3, y: 1}),
-                Floors.createTile({type: FloorTileType.PAPER_IN_WATER, x: 4, y: 1}),
-                Floors.createTile({type: FloorTileType.CLEAN, x: 5, y: 1}),
-                Floors.createTile({type: FloorTileType.CLEAN, x: 5, y: 2}),
-                Floors.createTile({type: FloorTileType.CRACKED, x: 4, y: 2}),
-                Floors.createTile({type: FloorTileType.PARTIAL_SE, x: 4, y: 3}),
+                new FloorTile({type: FloorTileType.DRAWINGS, position: [0, 1]}),
+                new FloorTile({type: FloorTileType.CRACKED, position: [1, 1]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [2, 1]}),
+                new FloorTile({type: FloorTileType.DIRTY, position: [3, 1]}),
+                new FloorTile({type: FloorTileType.PAPER_IN_WATER, position: [4, 1]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [5, 1]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [5, 2]}),
+                new FloorTile({type: FloorTileType.CRACKED, position: [4, 2]}),
+                new FloorTile({type: FloorTileType.PARTIAL_SE, position: [4, 3]}),
 
-                Floors.createTile({type: FloorTileType.CLEAN, x: 0, y: 2}),
-                Floors.createTile({type: FloorTileType.DIRTY, x: 1, y: 2}),
-                Floors.createTile({type: FloorTileType.CLEAN, x: 2, y: 2}),
-                Floors.createTile({type: FloorTileType.CLEAN, x: 2, y: 3}),
-                Floors.createTile({type: FloorTileType.DIRTY, x: 3, y: 2}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [0, 2]}),
+                new FloorTile({type: FloorTileType.DIRTY, position: [1, 2]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [2, 2]}),
+                new FloorTile({type: FloorTileType.CLEAN, position: [2, 3]}),
+                new FloorTile({type: FloorTileType.DIRTY, position: [3, 2]}),
 
-                Lasers.createObject({x: 2, y: 3}),
-                LaserLights.createObject({}),
+                new Laser({position: [2, 3]}),
+                new LaserLight({position: [2, 3]}),
 
-                Mirrors.createObject({ x: 4, y: 3, type: MirrorType.SW }),
+                new Mirror({ position: [4, 3], type: MirrorType.SW }),
 
-                Walls.createObject({x: 0, y: 0, type: WallType.ASC_CABLES }),
-                Walls.createObject({x: 1, y: 0, type: WallType.ASC_CABLES }),
-                Walls.createObject({x: 2, y: 0, type: WallType.ASC_CABLES_TRANSFORMER }),
-                Walls.createObject({x: 3, y: 0, type: WallType.ASC_CABLES_TUNNEL }),
-                Walls.createObject({x: 4, y: 0, type: WallType.ASC }),
-                Walls.createObject({x: 5, y: 0, type: WallType.ASC }),
+                new Wall({position: [0, 0], type: WallType.ASC_CABLES }),
+                new Wall({position: [1, 0], type: WallType.ASC_CABLES }),
+                new Wall({position: [2, 0], type: WallType.ASC_CABLES_TRANSFORMER }),
+                new Wall({position: [3, 0], type: WallType.ASC_CABLES_TUNNEL }),
+                new Wall({position: [4, 0], type: WallType.ASC }),
+                new Wall({position: [5, 0], type: WallType.ASC }),
 
-                Walls.createObject({x: 5, y: 1, type: WallType.DESC}),
-                Walls.createObject({x: 5, y: 2, type: WallType.DESC}),
+                new Wall({position: [5, 1], type: WallType.DESC}),
+                new Wall({position: [5, 2], type: WallType.DESC}),
             ]}
         />
         , document.getElementById('root'));

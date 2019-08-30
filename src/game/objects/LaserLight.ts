@@ -1,8 +1,8 @@
-import { VirtualObjectFactory, GameVirtualObjectSpec } from "../VirtualObject";
 import * as PIXI from "pixi.js";
 import {Game} from "../../Game";
+import {GameObject, GameObjectOptions, ObjectTexture} from "../Object";
 
-export interface LaserLightOptions {
+export interface LaserLightOptions extends GameObjectOptions {
 
 }
 
@@ -77,96 +77,107 @@ function getDrawPosition({
     };
 }
 
-export class LaserLight extends VirtualObjectFactory<LaserLightOptions, LaserLightState> {
+export class LaserLight extends GameObject<LaserLightOptions> {
     graphics: PIXI.Graphics;
+    p: number = 0;
 
-    createObject(options: LaserLightOptions): GameVirtualObjectSpec<LaserLightState> {
-        return {
-            type: "VIRTUAL_OBJECT",
-            name: "LaserLight",
-            position: {
-                x: 0,
-                y: 0,
-            },
-            onInit: (game) => {
-                this.graphics = new PIXI.Graphics();
-                game.pixiRoot.stage.addChild(this.graphics);
-            },
-            onRender: (objs, game) => {
-                this.graphics.clear();
-                for (const obj of objs) {
-                    if (obj.state.p < 1.00) { // while we didn't fully draw the line
-                        obj.state.p += 0.01; // increase the "progress" of the animation
-                    } else {
-                        obj.state.p = 0;
-                    }
+    getFloorTexture(): string {
+        return "";
+    }
 
-                    const points: [number, number][] = [
-                        [2,3],
-                        [4,3],
-                        [4,0],
-                    ];
+    getGlobalOverrides(): any {
+    }
 
-                    let lastPoint = points[0];
-                    let totalDist = 0;
-                    for (const point of points) {
-                        totalDist += Math.sqrt((point[0]-lastPoint[0])*(point[0]-lastPoint[0])+(point[1]-lastPoint[1])*(point[1]-lastPoint[1]));
-                        lastPoint = point;
-                    }
+    isVirtual(): boolean {
+        return true;
+    }
 
-                    const amps = [
-                        0,
-                        1.0673664307580015,
-                        3.999999999999999,
-                        5.877852522924732,
-                        7.431448254773942,
-                        8.090169943749475,
-                        9.135454576426008,
-                        9.781476007338057,
-                        10,
-                        9.945218953682733,
-                        9.781476007338057,
-                        9.510565162951536,
-                        9.13545457642601,
-                        8.660254037844387,
-                        8.090169943749475,
-                        7.431448254773945,
-                        6.691306063588583,
-                        5.877852522924733,
-                        4.999999999999999,
-                        4.067366430758001,
-                        3.090169943749475,
-                        2.079116908177593,
-                        1.0452846326765328,
-                        0,
-                    ];
+    getName(): string {
+        return "LaserLight";
+    }
 
-                    const l = amps.length;
-                    for (let i = 0; i <= l; ++i) {
-                        const { point, normalPoint, nonNormalPoint } = getDrawPosition({
-                            points,
-                            p: obj.state.p + (0.01 / totalDist)*i,
-                            totalDist,
-                            game,
-                            i,
-                            amplitudes: amps,
-                        });
+    getTextures(): ObjectTexture {
+        return null;
+    }
 
-                        this.graphics.lineStyle(1, 0xCC3331 + 0x000009 * 0);
-                        this.graphics.moveTo(point[0], point[1]);
-                        this.graphics.lineTo(normalPoint[0], normalPoint[1]);
+    onPostConstruct(game: Game): void {
+        this.graphics = new PIXI.Graphics();
+        game.pixiRoot.stage.addChild(this.graphics);
+    }
 
-                        this.graphics.lineStyle(1, 0xAA1111+ 0x090000 * 0);
-                        this.graphics.moveTo(point[0], point[1]);
-                        this.graphics.lineTo(nonNormalPoint[0], nonNormalPoint[1]);
-                    }
-                }
-            },
-            state: {
-                p: 0,
-            },
+    onPreDestruct(game: Game): void {
+    }
+
+    onRender(game: Game): void {
+        this.graphics.clear();
+
+        if (this.p < 1.00) { // while we didn't fully draw the line
+            this.p += 0.01; // increase the "progress" of the animation
+        } else {
+            this.p = 0;
+        }
+
+        const points: [number, number][] = [
+            [2,3],
+            [4,3],
+            [4,0],
+        ];
+
+        let lastPoint = points[0];
+        let totalDist = 0;
+        for (const point of points) {
+            totalDist += Math.sqrt((point[0]-lastPoint[0])*(point[0]-lastPoint[0])+(point[1]-lastPoint[1])*(point[1]-lastPoint[1]));
+            lastPoint = point;
+        }
+
+        const amps = [
+            0,
+            1.0673664307580015,
+            3.999999999999999,
+            5.877852522924732,
+            7.431448254773942,
+            8.090169943749475,
+            9.135454576426008,
+            9.781476007338057,
+            10,
+            9.945218953682733,
+            9.781476007338057,
+            9.510565162951536,
+            9.13545457642601,
+            8.660254037844387,
+            8.090169943749475,
+            7.431448254773945,
+            6.691306063588583,
+            5.877852522924733,
+            4.999999999999999,
+            4.067366430758001,
+            3.090169943749475,
+            2.079116908177593,
+            1.0452846326765328,
+            0,
+        ];
+
+        const l = amps.length;
+        for (let i = 0; i <= l; ++i) {
+            const { point, normalPoint, nonNormalPoint } = getDrawPosition({
+                points,
+                p: this.p + (0.01 / totalDist)*i,
+                totalDist,
+                game,
+                i,
+                amplitudes: amps,
+            });
+
+            this.graphics.lineStyle(1, 0xCC3331 + 0x000009 * 0);
+            this.graphics.moveTo(point[0], point[1]);
+            this.graphics.lineTo(normalPoint[0], normalPoint[1]);
+
+            this.graphics.lineStyle(1, 0xAA1111+ 0x090000 * 0);
+            this.graphics.moveTo(point[0], point[1]);
+            this.graphics.lineTo(nonNormalPoint[0], nonNormalPoint[1]);
         }
     }
-}
 
-export const LaserLights = new LaserLight();
+    onSelect(game: Game): void {
+    }
+}

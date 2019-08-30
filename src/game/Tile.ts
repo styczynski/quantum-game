@@ -1,16 +1,31 @@
-export interface TileSpec {
-    path: string;
-    movable: boolean;
-    position: {
-        x: number;
-        y: number;
-    };
-}
+import {Game} from "../Game";
+import {GameObject, GameObjectOptions, ObjectDimensions, ObjectTexture, TravisoObjectSpec} from "./Object";
 
-export interface GameTileSpec extends TileSpec {
-    type: "TILE";
-};
+export abstract class GameTile<GameObjectOptionsT extends GameObjectOptions> extends GameObject<GameObjectOptionsT> {
+    gameObject: TravisoObjectSpec;
 
-export abstract class TileFactory<OptionsT> {
-    abstract createTile(options: OptionsT): GameTileSpec;
+    isMoveable(): boolean {
+        return true;
+    }
+
+    isFloor(): boolean {
+        return true;
+    }
+
+    getTextures(): ObjectTexture {
+        return null;
+    }
+
+    getGlobalOverrides(): any {
+        return {};
+    }
+
+    abstract getFloorTexture(): string;
+
+    abstract getName(): string;
+
+    abstract onSelect(game: Game): void;
+    abstract onRender(game: Game): void;
+    abstract onPostConstruct(game: Game): void;
+    abstract onPreDestruct(game: Game): void;
 }

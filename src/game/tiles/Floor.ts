@@ -1,5 +1,3 @@
-import { TileFactory, GameTileSpec } from "../Tile";
-
 import TilePartialNWImg from '../../assets/traviso/map/tiles/t_lab_floor_part0.png';
 import TilePartialSEImg from '../../assets/traviso/map/tiles/t_lab_floor_part1.png';
 import TilePartialNE_SEImg from '../../assets/traviso/map/tiles/t_lab_floor_part2.png';
@@ -9,6 +7,9 @@ import TileImgDirty from '../../assets/traviso/map/tiles/t_lab_floor1.png';
 import TileImgCracked from '../../assets/traviso/map/tiles/t_lab_floor2.png';
 import TileImgPaperInWater from '../../assets/traviso/map/tiles/t_lab_floor3.png';
 import TileImgDrawings from '../../assets/traviso/map/tiles/t_lab_floor4.png';
+import { GameTile } from "../Tile";
+import {Game} from "../../Game";
+import {GameObjectOptions} from "../Object";
 
 export enum FloorTileType {
     CLEAN,
@@ -21,13 +22,11 @@ export enum FloorTileType {
     PARTIAL_NE_SE,
 }
 
-export interface FloorTileOptions {
+export interface FloorTileOptions extends GameObjectOptions {
     type: FloorTileType;
-    x: number;
-    y: number;
 }
 
-export class FloorTile extends TileFactory<FloorTileOptions> {
+export class FloorTile extends GameTile<FloorTileOptions> {
     getImagePath({ type }: FloorTileOptions): string {
         switch (type) {
             case FloorTileType.CLEAN: return TileImgClean;
@@ -41,19 +40,23 @@ export class FloorTile extends TileFactory<FloorTileOptions> {
         }
     }
 
-    createTile(options: FloorTileOptions): GameTileSpec {
-        const path = this.getImagePath(options);
+    getFloorTexture(): string {
+        return this.getImagePath(this.options);
+    }
 
-        return {
-            type: "TILE",
-            path,
-            movable: true,
-            position: {
-                x: options.x,
-                y: options.y,
-            }
-        }
+    getName(): string {
+        return "Floor";
+    }
+
+    onPostConstruct(game: Game): void {
+    }
+
+    onPreDestruct(game: Game): void {
+    }
+
+    onRender(game: Game): void {
+    }
+
+    onSelect(game: Game): void {
     }
 }
-
-export const Floors = new FloorTile();

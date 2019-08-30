@@ -6,15 +6,11 @@ import { TRAVISO } from './traviso.js';
 
 import deepClone from 'deep-clone';
 
-import { GameTileSpec } from './game/Tile';
-import { GameObjectSpec } from './game/Object';
-import { GameVirtualObjectSpec } from './game/VirtualObject';
+import {GameObject, GameObjectOptions, TravisoObjectSpec} from './game/Object';
 
 export * from './game/index';
 
 import ParticleSparkImg from './assets/traviso/particle/p_spark.png';
-
-export type GameEntitySpec = GameTileSpec | GameObjectSpec | GameVirtualObjectSpec<{}>;
 
 (window as any).PIXI = PIXI;
 import 'pixi-layers';
@@ -41,27 +37,33 @@ export interface GameMapDataTiles {
     }
 };
 
-export interface GameMapDataObjects {
-    [name: string]: {
-        movable: boolean;
-        interactive: boolean;
-        rowSpan: number;
-        columnSpan: number;
-        noTransparency: boolean;
-        floor: boolean;
-        visuals: {
-            idle: GameMapDataVisualsSpec;
-            idle_n?: GameMapDataVisualsSpec;
-            idle_w?: GameMapDataVisualsSpec;
-            idle_s?: GameMapDataVisualsSpec;
-            idle_e?: GameMapDataVisualsSpec;
-            idle_nw?: GameMapDataVisualsSpec;
-            idle_se?: GameMapDataVisualsSpec;
-            idle_ne?: GameMapDataVisualsSpec;
-            idle_sw?: GameMapDataVisualsSpec;
-        }
+export interface TravisoMapObjectSpec {
+    globalMapOptions: any;
+    movable: boolean;
+    interactive: boolean;
+    rowSpan: number;
+    columnSpan: number;
+    noTransparency: boolean;
+    floor: boolean;
+    moveable: boolean;
+    path: string;
+    visuals: {
+        idle: GameMapDataVisualsSpec;
+        idle_n?: GameMapDataVisualsSpec;
+        idle_w?: GameMapDataVisualsSpec;
+        idle_s?: GameMapDataVisualsSpec;
+        idle_e?: GameMapDataVisualsSpec;
+        idle_nw?: GameMapDataVisualsSpec;
+        idle_se?: GameMapDataVisualsSpec;
+        idle_ne?: GameMapDataVisualsSpec;
+        idle_sw?: GameMapDataVisualsSpec;
     }
+    origin: GameObject<GameObjectOptions>;
 };
+
+export interface TravisoMapObjectSpecMap {
+    [key: string]: TravisoMapObjectSpec;
+}
 
 export interface GameMapDataControllableLocation {
     columnIndex: number;
@@ -77,7 +79,7 @@ export interface GameMapDataHighlightImage {
 
 export interface GameMapData {
     tiles: GameMapDataTiles;
-    objects: GameMapDataObjects;
+    objects: TravisoMapObjectSpecMap;
     initialControllableLocation: GameMapDataControllableLocation;
     tileHighlightImage: GameMapDataHighlightImage;
     groundMap: GameMapDataEntityMapping;
@@ -85,7 +87,7 @@ export interface GameMapData {
 }
 
 export interface GameProps {
-    entities: GameEntitySpec[];
+    entities: GameObject<GameObjectOptions>[];
 }
 
 export class Game extends React.Component<GameProps> {
@@ -93,11 +95,17 @@ export class Game extends React.Component<GameProps> {
     canvas: HTMLCanvasElement;
     pixiRoot: PIXI.Application;
     engine: any;
-    objectsQuickMapping: Map<string, GameObjectSpec> = new Map();
+    virtualObjects: Map<string, Set<GameObject<GameObjectOptions>>> = new Map();
+    objectsPositionMapping: Map<string, Set<GameObject<GameObjectOptions>>> = new Map();
+    objectsTypeMapping: Map<string, [number, GameObject<GameObjectOptions>]> = new Map();
+    typeTilesMapping: Map<number, TravisoMapObjectSpec> = new Map();
+    typeObjectMapping: Map<number, TravisoMapObjectSpec> = new Map();
+    nextFreeObjectTypeNumber: number = 1;
+    coordsShiftX: number;
+    coordsShiftY: number;
+    mapW: number;
+    mapH: number;
 
-    tilesTypeMapping: Map<string, GameTileSpec>;
-    objectsTypeMapping: Map<string, GameObjectSpec>;
-    virtualObjects: Map<string, Set<GameVirtualObjectSpec<{}>>>;
 
     constructor(props: GameProps) {
         super(props);
@@ -105,26 +113,88 @@ export class Game extends React.Component<GameProps> {
         this.generateMapData = this.generateMapData.bind(this);
     }
 
-    getObject(position: { x: number; y: number }) {
-        const obj = this.objectsQuickMapping.get(`${position.x}x${position.y}`);
-        return obj;
+    private getNextFreeTypeObjectID() {
+        return this.nextFreeObjectTypeNumber++;
     }
 
-    generateMapData(): GameMapData {
+    private generateTravisoSpecsForGameObject(object: GameObject<GameObjectOptions>): TravisoMapObjectSpec {
+        return {
+            moveable: object.isMoveable(),
+            movable: object.isMoveable(),
+            interactive: object.isInteractive(),
+            rowSpan: object.dimensions().rowSpan,
+            columnSpan: object.dimensions().columnSpan,
+            noTransparency: !object.hasTransparency,
+            floor: object.isFloor(),
+            visuals: object.getTextures(),
+            globalMapOptions: object.getGlobalOverrides(),
+            path: object.getFloorTexture(),
+            origin: object,
+        };
+    }
 
-        const protoEntities = (this.props.entities);
+    private isObjectNewType(a: GameObject<GameObjectOptions>, b: GameObject<GameObjectOptions>) {
+        return a.getName() !== b.getName()
+            || JSON.stringify(a.getTextures()) !== JSON.stringify(b.getTextures())
+            || a.getFloorTexture() !== b.getFloorTexture()
+            || a.isVirtual() !== b.isVirtual()
+            || a.isMoveable() !== b.isMoveable()
+            || a.isInteractive() !== b.isInteractive()
+            || a.isFloor() !== b.isFloor()
+            || a.dimensions() !== b.dimensions()
+            || a.hasTransparency() !== b.hasTransparency()
+    }
 
-        const { maxX, maxY, minX, minY } = protoEntities.reduce<{
+    private getTypeForObjectClass(object: GameObject<GameObjectOptions>) {
+        let objSpec = this.objectsTypeMapping.get(object.getName());
+
+        console.log(`getTypeForObjectClass(${object.getName()});`);
+
+        let addNew = false;
+
+        if (objSpec === undefined) {
+            addNew = true;
+        } else {
+            addNew = this.isObjectNewType(object, objSpec[1]);
+        }
+
+        let objID: number = 0;
+        if (addNew) {
+            objID = this.getNextFreeTypeObjectID();
+            this.objectsTypeMapping.set(object.getName(), [objID, object]);
+
+            if (!object.isVirtual() && object.isFloor()) {
+                this.typeTilesMapping.set(objID, this.generateTravisoSpecsForGameObject(object));
+            } else if (!object.isVirtual() && !object.isFloor()) {
+                this.typeObjectMapping.set(objID, this.generateTravisoSpecsForGameObject(object));
+                console.log(`PUSH typeObjectMapping`);
+            }
+        } else {
+            objID = objSpec[0];
+        }
+        return objID;
+    }
+
+    generateMapData(objects: GameObject<GameObjectOptions>[]): GameMapData {
+
+        let preObjects = objects.map(obj => ({
+            pos: obj.getInitialPosition(),
+            obj,
+        }));
+
+        const getObjectPosHash = (obj: {pos: [number, number]}) => `${obj.pos[0]}x${obj.pos[1]}`;
+
+        const { maxX, maxY, minX, minY } = preObjects.reduce<{
             maxX: number,
             maxY: number,
             minX: number,
             minY: number,
-        }>(({ maxX, maxY, minX, minY }, tile) => {
+        }>(({ maxX, maxY, minX, minY }, {pos}) => {
             return {
-                maxX: Math.max(maxX, tile.position.x),
-                maxY: Math.max(maxY, tile.position.y),
-                minX: Math.min(minX, tile.position.x),
-                minY: Math.min(minY, tile.position.y),
+                maxX: Math.max(maxX, pos[0]),
+                maxY: Math.max(maxY, pos[1]),
+                minX: Math.min(minX, pos[0]),
+                minY: Math.min(minY, pos[1]),
             };
         }, {
             maxX: -1000,
@@ -133,109 +203,86 @@ export class Game extends React.Component<GameProps> {
             minY: 1000,
         });
 
-        const entities: GameEntitySpec[] = protoEntities.map(entity => {
+        this.coordsShiftX = -minX;
+        this.coordsShiftY = -minY;
+
+        preObjects = preObjects.map(entity => {
             return {
                 ...entity,
-                position: {
-                    x: entity.position.x - minX,
-                    y: entity.position.y - minY,
-                },
+                pos: [
+                    entity.pos[0] + this.coordsShiftX,
+                    entity.pos[1] + this.coordsShiftY,
+                ],
             };
         });
 
-        const tiles = entities.filter((entity: GameEntitySpec): entity is GameTileSpec => entity.type === "TILE");
-        const objects = entities.filter((entity: GameEntitySpec): entity is GameObjectSpec => entity.type === "OBJECT");
-        const virtualObjects = entities.filter((entity: GameEntitySpec): entity is GameVirtualObjectSpec<{}> => entity.type === "VIRTUAL_OBJECT");
-
         this.virtualObjects = new Map();
-        for (const obj of virtualObjects) {
-            let objGroup = this.virtualObjects.get(obj.name);
-            if (!objGroup) {
-                objGroup = new Set();
-                this.virtualObjects.set(obj.name, objGroup);
+        for (const obj of preObjects) {
+            if (obj.obj.isVirtual()) {
+                let objGroup = this.virtualObjects.get(obj.obj.getName());
+                if (!objGroup) {
+                    objGroup = new Set();
+                    this.virtualObjects.set(obj.obj.getName(), objGroup);
+                }
+                objGroup.add(obj.obj);
             }
-            objGroup.add(obj);
         }
 
-        let tileFreeTypeNo = 1;
-        let objectFreeTypeNo = 1;
-
-        const tilesSerialTypeMapping: Map<string, {id: number; spec: GameTileSpec}> = new Map();
-        const objectsSerialTypeMapping: Map<string, {id: number; spec: GameObjectSpec}> = new Map();
-
-        this.tilesTypeMapping = new Map();
-        this.objectsTypeMapping = new Map();
-
-        const tilesQuickMapping: Map<string, GameTileSpec> = new Map();
-        this.objectsQuickMapping = new Map();
-
-        tiles.forEach(tile => {
-           tilesQuickMapping.set(`${tile.position.x}x${tile.position.y}`, tile);
+        this.objectsPositionMapping = new Map();
+        preObjects.forEach(obj => {
+            let objectsAtPosition = this.objectsPositionMapping.get(getObjectPosHash(obj));
+            if (objectsAtPosition === undefined) {
+                objectsAtPosition = new Set();
+                this.objectsPositionMapping.set(getObjectPosHash(obj), objectsAtPosition);
+            }
+            objectsAtPosition.add(obj.obj);
         });
 
-        objects.forEach(obj => {
-            console.log(`Add player key = ${obj.position.x}x${obj.position.y}`);
-            this.objectsQuickMapping.set(`${obj.position.x}x${obj.position.y}`, obj);
-        });
-
-        const mapW = maxX - minX;
-        const mapH = maxY - minY;
+        this.mapW = maxX - minX;
+        this.mapH = maxY - minY;
 
         const mapTiles: { row: string }[] = [];
         const mapObjects: { row: string }[] = [];
 
-        for (let y=0;y<=mapH;++y) {
+        for (let y=0;y<=this.mapH;++y) {
             const rowTilesBuf: string[] = [];
             const rowObjectsBuf: string[] = [];
 
-            for (let x=0;x<=mapW;++x) {
-                const key = `${x}x${y}`;
+            for (let x=0;x<=this.mapW;++x) {
+                const key = getObjectPosHash({pos: [x, y]});
+                const objectsAtPosition = this.objectsPositionMapping.get(key);
 
-                if (tilesQuickMapping.has(key)) {
-                    const specs = tilesQuickMapping.get(key);
-                    const specsHash = JSON.stringify({
-                        movable: specs.movable,
-                        path: specs.path,
-                    });
-                    let specsID = null;
-
-                    if (tilesSerialTypeMapping.has(specsHash)) {
-                        specsID = tilesSerialTypeMapping.get(specsHash).id;
-                    } else {
-                        specsID = tileFreeTypeNo++;
-                        tilesSerialTypeMapping.set(specsHash, {
-                            id: specsID,
-                            spec: specs,
-                        });
-                        this.tilesTypeMapping.set(specsID.toString(), specs);
+                if (objectsAtPosition !== undefined) {
+                    let hasTile = false;
+                    let hasObject = false;
+                    for (const obj of objectsAtPosition.values()) {
+                        if (!hasTile && obj.isFloor()) {
+                            // Is tile
+                            const objID = this.getTypeForObjectClass(obj);
+                            rowTilesBuf.push(objID.toString());
+                            hasTile = true;
+                        } else if (!hasObject && !obj.isFloor() && !obj.isVirtual()) {
+                            const objID = this.getTypeForObjectClass(obj);
+                            rowObjectsBuf.push(objID.toString());
+                            hasObject = true;
+                        } else {
+                            this.getTypeForObjectClass(obj);
+                        }
                     }
-                    rowTilesBuf.push(specsID.toString());
+
+                    if (!hasTile) {
+                        rowTilesBuf.push("0");
+                    }
+
+                    if (!hasObject) {
+                        rowObjectsBuf.push("0");
+                    }
                 } else {
+                    // Nothing theres - no tiles, no objects
                     rowTilesBuf.push("0");
-                }
-
-                if (this.objectsQuickMapping.has(key)) {
-                    console.log(`player match => ${key}`)
-                    const specs = this.objectsQuickMapping.get(key);
-                    const specsHash = JSON.stringify({
-                        vis: specs.visuals,
-                    });
-                    let specsID = null;
-
-                    if (objectsSerialTypeMapping.has(specsHash)) {
-                        specsID = objectsSerialTypeMapping.get(specsHash).id;
-                    } else {
-                        specsID = objectFreeTypeNo++;
-                        objectsSerialTypeMapping.set(specsHash, {
-                            id: specsID,
-                            spec: specs,
-                        });
-                        this.objectsTypeMapping.set(specsID.toString(), specs);
-                    }
-                    rowObjectsBuf.push(specsID.toString());
-                } else {
                     rowObjectsBuf.push("0");
                 }
+
             }
 
             mapTiles.push({
@@ -247,10 +294,7 @@ export class Game extends React.Component<GameProps> {
             });
         }
 
-
-        return [...objectsSerialTypeMapping.entries()].reduce<GameMapData>((acc, [_, {
-            spec,
-        }]) => {
+        return [...this.typeObjectMapping.entries()].reduce<GameMapData>((acc, [_, spec]) => {
             if(spec.globalMapOptions) {
 
                 let extras: Partial<GameMapData> = {
@@ -277,19 +321,13 @@ export class Game extends React.Component<GameProps> {
             ...DEFAULT_GAME_MAP_DATA,
             objectsMap: mapObjects,
             groundMap: mapTiles,
-            tiles: [...tilesSerialTypeMapping.entries()].reduce<GameMapDataTiles>((acc, [_, {
-                spec,
-                id,
-            }]) => {
+            tiles: [...this.typeTilesMapping.entries()].reduce<GameMapDataTiles>((acc, [id, spec]) => {
                 return {
                     ...acc,
                     [id.toString()]: spec,
                 };
             }, {}),
-            objects: [...objectsSerialTypeMapping.entries()].reduce<GameMapDataObjects>((acc, [_, {
-                spec,
-                id,
-            }]) => {
+            objects: [...this.typeObjectMapping.entries()].reduce<TravisoMapObjectSpecMap>((acc, [id, spec]) => {
                 return {
                     ...acc,
                     [id.toString()]: spec,
@@ -320,20 +358,17 @@ export class Game extends React.Component<GameProps> {
 
         // engine-instance configuration object
         const instanceConfig: any = {
-            mapDataPath: this.generateMapData(), // the path to the json file that defines map data, required
+            mapDataPath: this.generateMapData(this.props.entities), // the path to the json file that defines map data, required
             assetsToLoad: [""], // array of paths to the assets that are desired to be loaded by traviso, no need to use if assets are already loaded to PIXI cache, default null
             pixiRoot: this.pixiRoot,
-            objectSelectCallback: (obj: any) => {
-                const objSpec = this.objectsTypeMapping.get(obj.type.toString());
-                console.log("SELECTED TYPE "+obj.type);
-                console.log(objSpec);
-                if (objSpec && objSpec.onSelect) {
-                    objSpec.onSelect(obj, this);
+            objectSelectCallback: (obj: TravisoObjectSpec) => {
+                if (obj.origin) {
+                    obj.origin.onSelect(this);
                 }
             },
         };
 
-        console.log(JSON.stringify(this.generateMapData(), null, 2));
+        console.log(JSON.stringify(this.generateMapData(this.props.entities), null, 2));
         this.engine = TRAVISO.getEngineInstance(instanceConfig);
         this.pixiRoot.stage.addChild(this.engine);
 
@@ -409,10 +444,9 @@ export class Game extends React.Component<GameProps> {
         };
         setTimeout(runStars, 500);
 
-        for (const [objName, objSpecs] of this.virtualObjects.entries()) {
-            const spec = [...objSpecs.values()][0];
-            if (spec.onInit) {
-                spec.onInit(this);
+        for (const [_, objects] of this.objectsPositionMapping.entries()) {
+            for (const object of objects) {
+                object.onPostConstruct(this);
             }
         }
 
@@ -420,26 +454,9 @@ export class Game extends React.Component<GameProps> {
             requestAnimationFrame(gameLoop);
             //setTimeout(gameLoop, 90);
 
-            for (const [objType, objSpec] of this.objectsTypeMapping.entries()) {
-                const objs = [];
-                if (objSpec.onRender) {
-                    for (const column of this.engine.objArray) {
-                        for (const row of column) {
-                            if (row) {
-                                for (const item of row) {
-                                    if (item && item.type && item.type.toString() === objType) objs.push(item);
-                                }
-                            }
-                        }
-                    }
-                    objSpec.onRender(objs, this);
-                }
-            }
-
-            for (const [objName, objSpecs] of this.virtualObjects.entries()) {
-                const spec = [...objSpecs.values()][0];
-                if (spec.onRender) {
-                    spec.onRender([...objSpecs], this);
+            for (const [_, objects] of this.objectsPositionMapping.entries()) {
+                for (const object of objects) {
+                    object.onRender(this);
                 }
             }
 
