@@ -5470,6 +5470,16 @@ pixi-dust@^4.5.3:
   resolved "https://registry.yarnpkg.com/pixi-dust/-/pixi-dust-4.5.3.tgz#d4d495fd7ab399dce5e75d42dcb4bd485efbc424"
   integrity sha512-VWPXuIJ2HQbW9qlB0jJWresh9upKtlx8epgt7L8VGMpkgKsYVM5LMTsfrKD2rnbJXsfKiJUhGPEJ4PxEzJS7Ow==
 
+pixi-layers@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/pixi-layers/-/pixi-layers-0.2.1.tgz#7a3f7cdc7707086980a49c004a6cb1646d1138a9"
+  integrity sha512-slDWDXv8gz2/0jK4kOllORHNU7IuWwRQOUok4CuJSlZTMRhAl45gwW6d0IE/V624IsPhT1UhrjQcxGvKHJ+W9Q==
+
+pixi-lights@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/pixi-lights/-/pixi-lights-2.0.3.tgz#e0a8ab346bc78927f338bc2876ec183600846e6f"
+  integrity sha512-bKHv7X95R+zWiyHyFT5d1C/1XcNaViRlJ4mNYALyVQZsLVKiGZ73jYVKU9kcj4SzA1lPC8/jrWUNL0kSROny5Q==
+
 pixi.js@^5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-5.1.2.tgz#5c05c2f7ca9f14bbaf02b33c645a3f13ba0c4200"

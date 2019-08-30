@@ -16,6 +16,9 @@ import ParticleSparkImg from './assets/traviso/particle/p_spark.png';
 
 export type GameEntitySpec = GameTileSpec | GameObjectSpec | GameVirtualObjectSpec<{}>;
 
+(window as any).PIXI = PIXI;
+import 'pixi-layers';
+
 const DEFAULT_GAME_MAP_DATA: GameMapData = {
     tiles: {},
     objects: {},
@@ -346,6 +349,30 @@ export class Game extends React.Component<GameProps> {
             }
         );
         this.pixiRoot.stage.addChild(starContainer);
+
+
+        /*const lighting = new (PIXI as any).display.Layer();
+        lighting.on('display', (element: any) => {
+            element.blendMode = PIXI.BLEND_MODES.ADD;
+        });
+        lighting.useRenderTexture = true;
+        lighting.clearColor = [0.5, 0.5, 0.5, 1]; // ambient gray
+        this.pixiRoot.stage.addChild(lighting);
+        const lightingSprite = new PIXI.Sprite(lighting.getRenderTexture());
+        lightingSprite.blendMode = PIXI.BLEND_MODES.MULTIPLY;
+        this.pixiRoot.stage.addChild(lightingSprite);
+
+        const lightbulb = new PIXI.Graphics();
+        const rr = Math.random() * 0x80 | 0;
+        const rg = Math.random() * 0x80 | 0;
+        const rb = Math.random() * 0x80 | 0;
+        const rad = 50 + Math.random() * 20;
+        lightbulb.beginFill((rr << 16) + (rg << 8) + rb, 1.0);
+        lightbulb.drawCircle(0, 0, rad);
+        lightbulb.endFill();
+        (lightbulb as any).parentLayer = lighting;// <-- try comment it
+        this.pixiRoot.stage.addChild(lightbulb);*/
+
 
         let stars: any[] = [];
         let starStep = 0;

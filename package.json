@@ -42,6 +42,8 @@
     "karma-phantomjs-launcher": "1.0.4",
     "karma-webpack": "3.0.0",
     "pixi-dust": "^4.5.3",
+    "pixi-layers": "^0.2.1",
+    "pixi-lights": "^2.0.3",
     "pixi.js": "^5.1.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
