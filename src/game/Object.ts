@@ -110,16 +110,30 @@ export abstract class GameObject<GameObjectOptionsT extends GameObjectOptions> {
     }
 
     abstract getTextures(): ObjectTexture;
-    abstract getGlobalOverrides(): any;
-    abstract getFloorTexture(): string;
+
+    getGlobalOverrides(): any {
+        return {};
+    }
+
+    getFloorTexture(): string {
+        return "";
+    }
 
     getInitialPosition(): [number, number] {
         return this.options.position;
     }
 
     abstract getName(): string;
-    abstract onSelect(game: Game): void;
-    abstract onRender(game: Game): void;
-    abstract onPostConstruct(game: Game): void;
-    abstract onPreDestruct(game: Game): void;
+
+    onSelect(game: Game): void {
+    }
+
+    onRender(game: Game): void {
+    }
+
+    onPostConstruct(game: Game): void {
+    }
+
+    onPreDestruct(game: Game): void {
+    }
 }

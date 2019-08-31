@@ -23,9 +23,4 @@ export abstract class GameTile<GameObjectOptionsT extends GameObjectOptions> ext
     abstract getFloorTexture(): string;
 
     abstract getName(): string;
-
-    abstract onSelect(game: Game): void;
-    abstract onRender(game: Game): void;
-    abstract onPostConstruct(game: Game): void;
-    abstract onPreDestruct(game: Game): void;
 }

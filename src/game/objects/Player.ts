@@ -31,10 +31,6 @@ export class Player extends GameObject<PlayerOptions> {
         return false;
     }
 
-    getFloorTexture(): string {
-        return "";
-    }
-
     getGlobalOverrides(): any {
         return {
             "initialControllableLocation": { "columnIndex": this.options.position[0], "rowIndex": this.options.position[1], "controllableId": "3" },
@@ -100,15 +96,4 @@ export class Player extends GameObject<PlayerOptions> {
         }
     }
 
-    onPostConstruct(game: Game): void {
-    }
-
-    onPreDestruct(game: Game): void {
-    }
-
-    onRender(game: Game): void {
-    }
-
-    onSelect(game: Game): void {
-    }
 }

@@ -81,13 +81,6 @@ export class LaserLight extends GameObject<LaserLightOptions> {
     graphics: PIXI.Graphics;
     p: number = 0;
 
-    getFloorTexture(): string {
-        return "";
-    }
-
-    getGlobalOverrides(): any {
-    }
-
     isVirtual(): boolean {
         return true;
     }
@@ -103,9 +96,6 @@ export class LaserLight extends GameObject<LaserLightOptions> {
     onPostConstruct(game: Game): void {
         this.graphics = new PIXI.Graphics();
         game.pixiRoot.stage.addChild(this.graphics);
-    }
-
-    onPreDestruct(game: Game): void {
     }
 
     onRender(game: Game): void {
@@ -178,6 +168,4 @@ export class LaserLight extends GameObject<LaserLightOptions> {
         }
     }
 
-    onSelect(game: Game): void {
-    }
 }

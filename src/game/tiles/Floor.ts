@@ -47,16 +47,4 @@ export class FloorTile extends GameTile<FloorTileOptions> {
     getName(): string {
         return "Floor";
     }
-
-    onPostConstruct(game: Game): void {
-    }
-
-    onPreDestruct(game: Game): void {
-    }
-
-    onRender(game: Game): void {
-    }
-
-    onSelect(game: Game): void {
-    }
 }

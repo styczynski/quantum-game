@@ -35,30 +35,11 @@ export class Wall extends GameObject<WallOptions> {
         }
     }
 
-    getFloorTexture(): string {
-        return "";
-    }
-
-    getGlobalOverrides(): any {
-    }
-
     getName(): string {
         return "Wall";
     }
 
     getTextures(): ObjectTexture {
         return { "idle": { "frames": [ { "path": this.getImagePath(this.options) } ] } };
-    }
-
-    onPostConstruct(game: Game): void {
-    }
-
-    onPreDestruct(game: Game): void {
-    }
-
-    onRender(game: Game): void {
-    }
-
-    onSelect(game: Game): void {
     }
 }

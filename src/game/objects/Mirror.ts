@@ -29,19 +29,20 @@ export class Mirror extends GameObject<MirrorOptions> {
             case MirrorType.NW: return LabMirrorImg1;
             case MirrorType.SW: return LabMirrorImg2;
             case MirrorType.SE: return LabMirrorImg3;
+        }
+    }
 
+    private nextMirrorType(type: MirrorType) {
+        switch(type) {
+            case MirrorType.NE: return MirrorType.NW;
+            case MirrorType.NW: return MirrorType.SW;
+            case MirrorType.SW: return MirrorType.SE;
+            case MirrorType.SE: return MirrorType.NE;
         }
     }
 
     isInteractive(): boolean {
         return true;
-    }
-
-    getFloorTexture(): string {
-        return "";
-    }
-
-    getGlobalOverrides(): any {
     }
 
     getName(): string {
@@ -52,21 +53,12 @@ export class Mirror extends GameObject<MirrorOptions> {
         return { "idle": { "frames": [ { "path": this.getImagePath(this.options) } ] } };
     }
 
-    onPostConstruct(game: Game): void {
-    }
-
-    onPreDestruct(game: Game): void {
-    }
-
-    onRender(game: Game): void {
-    }
-
     onSelect(game: Game): void {
         game.removeObject(this);
         game.addObjects([
             new Mirror({
                 ...this.options,
-                //type: MirrorType.NW,
+                type: this.nextMirrorType(this.options.type),
             })
         ]);
     }

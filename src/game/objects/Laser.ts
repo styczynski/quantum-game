@@ -13,13 +13,6 @@ export class Laser extends GameObject<LaserOptions> {
         return false;
     }
 
-    getFloorTexture(): string {
-        return "";
-    }
-
-    getGlobalOverrides(): any {
-    }
-
     getName(): string {
         return "Laser";
     }
@@ -32,18 +25,5 @@ export class Laser extends GameObject<LaserOptions> {
                 ]
             }
         };
-    }
-
-    onPostConstruct(game: Game): void {
-    }
-
-    onPreDestruct(game: Game): void {
-    }
-
-    onRender(game: Game): void {
-    }
-
-    onSelect(game: Game): void {
-       //game.engine.moveCurrentControllableToObj();
     }
 }

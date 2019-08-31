@@ -18,13 +18,6 @@ export class Sparks extends GameObject<SparksOptions> {
         this.runSpread = this.runSpread.bind(this);
     }
 
-    getFloorTexture(): string {
-        return "";
-    }
-
-    getGlobalOverrides(): any {
-    }
-
     isVirtual(): boolean {
         return true;
     }
@@ -51,9 +44,6 @@ export class Sparks extends GameObject<SparksOptions> {
         this.stars = [];
         this.starStep = 0;
         setTimeout(() => this.runSpread(game), 500);
-    }
-
-    onPreDestruct(game: Game): void {
     }
 
     runSpread(game: Game) {
@@ -87,8 +77,5 @@ export class Sparks extends GameObject<SparksOptions> {
             });
         }
         ++this.starStep;
-    }
-
-    onSelect(game: Game): void {
     }
 }

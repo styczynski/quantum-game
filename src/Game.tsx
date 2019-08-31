@@ -188,7 +188,11 @@ export class Game extends React.Component<GameProps> {
     removeObject(object: GameObject<GameObjectOptions>) {
         if (object.gameObject) {
             this.engine.removeObjectFromLocation(object.gameObject);
-            this.objectsPositionMapping.delete(this.getObjectPosHash({ pos: [object.gameObject.mapPos.r, object.gameObject.mapPos.c] }));
+
+            const key = this.getObjectPosHash({ pos: [object.gameObject.mapPos.c, object.gameObject.mapPos.r] });
+            this.objectsPositionMapping.delete(key);
+        } else {
+            throw new Error("Failed to remove not attached game object.");
         }
         object.gameObject = null;
     }
@@ -226,13 +230,21 @@ export class Game extends React.Component<GameProps> {
 
         for (const { obj, pos } of preObjects) {
             const objID = this.getTypeForObjectClass(obj);
-            console.log("CREATE "+objID);
             this.engine.mapData.objects[objID.toString()] = this.engine.parseType(this.generateTravisoSpecsForGameObject(obj), objID.toString());
             this.engine.createAndAddObjectToLocation(objID, {
-                c: pos[1],
-                r: pos[0],
+                c: pos[0],
+                r: pos[1],
+            });
+
+            setTimeout(() => {
+                try {
+                    obj.gameObject = this.engine.getObjectsAtRowAndColumn(pos[1], pos[0])[0];
+                } catch (e) {
+                    obj.gameObject = null;
+                }
             });
         }
+
     }
 
     generateMapData(objects: GameObject<GameObjectOptions>[]): GameMapData {
@@ -480,8 +492,6 @@ export class Game extends React.Component<GameProps> {
                         object.gameObject = this.engine.getObjectsAtRowAndColumn(c, r)[0];
                     } catch (e) {
                         object.gameObject = null;
-                        console.log(`GET OBJECT FROM ${r} x ${c} failed`);
-                        //throw e;
                     }
                 }
             }
