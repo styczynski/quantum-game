@@ -18,10 +18,11 @@ import HeroStill3Img from '../../assets/traviso/hero/hero_still3.png';
 import HeroStill3Img_0 from '../../assets/traviso/hero/hero_still3_0.png';
 import HeroStill3Img_1 from '../../assets/traviso/hero/hero_still3_1.png';
 import {Game} from "../../Game";
+import {InspectableGameObject} from "../InspectableObject";
 
 export interface PlayerOptions extends GameObjectOptions {}
 
-export class Player extends GameObject<PlayerOptions> {
+export class Player extends InspectableGameObject<PlayerOptions> {
 
     isMoveable(): boolean {
         return true;

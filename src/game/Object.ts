@@ -20,6 +20,13 @@ export interface TravisoMapObjectSpec {
     }
 }
 
+export interface GameObjectMouseEvent {
+    globalPosition: [number, number];
+    position: [number, number];
+    lastPosition: [number, number];
+    screenPosition: [number, number];
+}
+
 export interface TravisoObjectSpec {
     alpha: number;
     columnSpan: number;
@@ -135,5 +142,14 @@ export abstract class GameObject<GameObjectOptionsT extends GameObjectOptions> {
     }
 
     onPreDestruct(game: Game): void {
+    }
+
+    onMouseOut(game: Game, event: GameObjectMouseEvent): void {
+    }
+
+    onMouseIn(game: Game, event: GameObjectMouseEvent): void {
+    }
+
+    onMouseOver(game: Game, event: GameObjectMouseEvent): void {
     }
 }

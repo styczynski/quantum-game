@@ -9,6 +9,7 @@ import { Game } from "../../Game";
 import ParticleSparkImg from "../../assets/traviso/particle/p_spark.png";
 
 import * as PIXI from 'pixi.js';
+import {InspectableGameObject} from "../InspectableObject";
 
 export enum MirrorType {
     NW,
@@ -21,7 +22,7 @@ export interface MirrorOptions extends GameObjectOptions {
     type: MirrorType;
 }
 
-export class Mirror extends GameObject<MirrorOptions> {
+export class Mirror extends InspectableGameObject<MirrorOptions> {
 
     getImagePath({ type }: MirrorOptions): string {
         switch(type) {

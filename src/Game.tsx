@@ -7,7 +7,7 @@ import Dust from 'pixi-dust';
 
 import deepClone from 'deep-clone';
 
-import {GameObject, GameObjectOptions, TravisoObjectSpec} from './game/Object';
+import {GameObject, GameObjectMouseEvent, GameObjectOptions, TravisoObjectSpec} from './game/Object';
 
 export * from './game/index';
 
@@ -186,6 +186,7 @@ export class Game extends React.Component<GameProps> {
     }
 
     removeObject(object: GameObject<GameObjectOptions>) {
+        object.onPreDestruct(this);
         if (object.gameObject) {
             this.engine.removeObjectFromLocation(object.gameObject);
 
@@ -195,6 +196,19 @@ export class Game extends React.Component<GameProps> {
             throw new Error("Failed to remove not attached game object.");
         }
         object.gameObject = null;
+    }
+
+    getConcreteObjectAt(position: [number, number]): GameObject<GameObjectOptions> {
+        const objsAtLocation = this.objectsPositionMapping.get(this.getObjectPosHash({ pos: position }));
+        if (!objsAtLocation) {
+            return null;
+        }
+        for (const obj of objsAtLocation) {
+            if (!obj.isVirtual() && !obj.isFloor()) {
+                return obj;
+            }
+        }
+        return null;
     }
 
     addObjects(objects: GameObject<GameObjectOptions>[]) {
@@ -235,6 +249,8 @@ export class Game extends React.Component<GameProps> {
                 c: pos[0],
                 r: pos[1],
             });
+
+            obj.onPostConstruct(this);
 
             setTimeout(() => {
                 try {
@@ -432,18 +448,67 @@ export class Game extends React.Component<GameProps> {
             assetsToLoad: [""], // array of paths to the assets that are desired to be loaded by traviso, no need to use if assets are already loaded to PIXI cache, default null
             pixiRoot: this.pixiRoot,
             objectSelectCallback: (objSrc: TravisoObjectSpec) => {
-                const objsAtLocation = this.objectsPositionMapping.get(this.getObjectPosHash({ pos: [objSrc.mapPos.c, objSrc.mapPos.r] }));
-                for (const obj of objsAtLocation) {
-                    if (!obj.isVirtual() && !obj.isFloor()) {
-                        obj.onSelect(this);
-                        return;
-                    }
+                const selObj = this.getConcreteObjectAt([objSrc.mapPos.c, objSrc.mapPos.r]);
+                if (selObj) {
+                    selObj.onSelect(this);
                 }
             },
         };
 
         console.log(JSON.stringify(this.generateMapData(this.props.entities), null, 2));
         this.engine = TRAVISO.getEngineInstance(instanceConfig);
+
+        let lastHoverCoords: [number, number] = [0, 0];
+        this.engine.setCustomMouseMoveHandler((e: any) => {
+            const x = e.data.global.x - this.engine.mapContainer.position.x - 5;
+            const y = e.data.global.y - this.engine.mapContainer.position.y;
+
+            const W = this.engine.TILE_HALF_W;
+            const H = this.engine.TILE_HALF_H;
+
+            const A = (x+y) / (W-H);
+            const B = (W+H) / (W-H);
+
+            const r = Math.round((x - A*W) / (W - B*W));
+            const c = Math.round(A - r*B);
+
+
+            const r2 = Math.round(x / W);
+            const c2 = Math.round(y / H);
+
+            const isoX = y / H + x / (W)
+            const isoY = y / H - x / (W)
+
+            const currentHoverCoords: [number, number] = [c, r];
+            console.log([c, r]);
+
+            const gameMouseEvent: GameObjectMouseEvent = {
+                globalPosition: [x, y],
+                position: currentHoverCoords,
+                lastPosition: lastHoverCoords,
+                screenPosition: [e.data.global.x, e.data.global.y],
+            };
+
+            if (lastHoverCoords[0] != currentHoverCoords[0] || lastHoverCoords[1] != currentHoverCoords[1]) {
+                const lastHoverObj = this.getConcreteObjectAt(lastHoverCoords);
+                if (lastHoverObj) {
+                    lastHoverObj.onMouseOut(this, gameMouseEvent);
+                }
+
+                const currentHoverObj = this.getConcreteObjectAt(currentHoverCoords);
+                if (currentHoverObj) {
+                    currentHoverObj.onMouseIn(this, gameMouseEvent);
+                }
+            }
+
+            const currentHoverObj = this.getConcreteObjectAt(currentHoverCoords);
+            if (currentHoverObj) {
+                currentHoverObj.onMouseOver(this, gameMouseEvent);
+            }
+
+            //console.log([x, y]);
+            lastHoverCoords = currentHoverCoords;
+        });
         this.pixiRoot.stage.addChild(this.engine);
 
 

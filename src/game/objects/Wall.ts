@@ -9,6 +9,7 @@ import { Game } from "../../Game";
 import ParticleSparkImg from "../../assets/traviso/particle/p_spark.png";
 
 import * as PIXI from 'pixi.js';
+import {InspectableGameObject} from "../InspectableObject";
 
 export enum WallType {
     ASC_CABLES,
@@ -22,7 +23,7 @@ export interface WallOptions extends GameObjectOptions {
     type: WallType;
 }
 
-export class Wall extends GameObject<WallOptions> {
+export class Wall extends InspectableGameObject<WallOptions> {
 
     getImagePath({ type }: WallOptions): string {
         switch(type) {

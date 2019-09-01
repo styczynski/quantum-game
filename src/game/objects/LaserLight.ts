@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import {Game} from "../../Game";
+import {Game, Mirror, MirrorType} from "../../Game";
 import {GameObject, GameObjectOptions, ObjectTexture} from "../Object";
 
 export interface LaserLightOptions extends GameObjectOptions {
@@ -8,6 +8,17 @@ export interface LaserLightOptions extends GameObjectOptions {
 
 export interface LaserLightState {
     p: number;
+}
+
+function getShiftForObject(obj: GameObject<GameObjectOptions>): [number, number] {
+    switch (obj.getName()) {
+        case "Mirror": {
+            switch ((obj as Mirror).getOptions().type) {
+                case MirrorType.SW: return [-10, 2];
+            }
+        }
+    }
+    return [0, 0];
 }
 
 function getDrawPosition({
@@ -32,7 +43,13 @@ function getDrawPosition({
         const dist = Math.sqrt((point[0] - lastPoint[0]) * (point[0] - lastPoint[0]) + (point[1] - lastPoint[1]) * (point[1] - lastPoint[1]));
         let pVal = Math.min(1, Math.max(0, (totalDist * p - currentDist) / dist));
 
-        const shift: [number, number] = [10, -27];
+        let shift: [number, number] = [10, -27];
+        const objThere = game.getConcreteObjectAt(point);
+        if (objThere) {
+            shift[0] += getShiftForObject(objThere)[0];
+            shift[1] += getShiftForObject(objThere)[1];
+        }
+
         if (pVal > 0 && pVal < 1) {
 
             const lineFromX = shiftLast[0] + game.engine.mapContainer.position.x + game.engine.getTilePosXFor(lastPoint[0], lastPoint[1]);
@@ -77,6 +94,78 @@ function getDrawPosition({
     };
 }
 
+export enum LaserDirection {
+    NW,
+    NE,
+    SW,
+    SE,
+    ABSORBED,
+}
+
+function calculateLaserReflection(currentDirection: LaserDirection, obj: GameObject<GameObjectOptions>): LaserDirection {
+    switch (obj.getName()) {
+        case "Mirror": {
+            switch ((obj as Mirror).getOptions().type) {
+                case MirrorType.SW: {
+                    switch (currentDirection) {
+                        case LaserDirection.NE: return LaserDirection.SW;
+                    }
+                    break;
+                }
+                case MirrorType.SE: {
+                    switch (currentDirection) {
+                        case LaserDirection.NE: return LaserDirection.NE;
+                    }
+                }
+                case MirrorType.NW: {
+                    switch (currentDirection) {
+                        case LaserDirection.NE: return LaserDirection.NE;
+                    }
+                }
+                case MirrorType.NE: {
+                    switch (currentDirection) {
+                        case LaserDirection.NE: return LaserDirection.SW;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    return LaserDirection.ABSORBED;
+}
+
+function constructLaserPath(game: Game, point: [number, number], direction: LaserDirection): [number, number][] {
+    let currentDirection = direction;
+    let x = point[0];
+    let y = point[1];
+    let routePoints: [number, number][] = [];
+
+    const MAX_DIST = 10;
+
+    while (currentDirection != LaserDirection.ABSORBED) {
+
+        if (Math.abs(point[0]-x) + Math.abs(point[1]-y) >= MAX_DIST) break;
+
+        switch (currentDirection) {
+            case LaserDirection.SE: ++y; break;
+            case LaserDirection.SW: --x; break;
+            case LaserDirection.NE: ++x; break;
+            case LaserDirection.NW: --y; break;
+        }
+
+        const obj = game.getConcreteObjectAt([x, y]);
+        if (obj) {
+            currentDirection = calculateLaserReflection(currentDirection, obj);
+        }
+
+        routePoints.push([x, y]);
+    }
+
+    return routePoints;
+}
+
 export class LaserLight extends GameObject<LaserLightOptions> {
     graphics: PIXI.Graphics;
     p: number = 0;
@@ -101,23 +190,19 @@ export class LaserLight extends GameObject<LaserLightOptions> {
     onRender(game: Game): void {
         this.graphics.clear();
 
-        if (this.p < 1.00) { // while we didn't fully draw the line
-            this.p += 0.01; // increase the "progress" of the animation
-        } else {
-            this.p = 0;
-        }
-
-        const points: [number, number][] = [
-            [2,3],
-            [4,3],
-            [4,0],
-        ];
+        const points: [number, number][] = constructLaserPath(game,[2, 3], LaserDirection.NE);
 
         let lastPoint = points[0];
         let totalDist = 0;
         for (const point of points) {
             totalDist += Math.sqrt((point[0]-lastPoint[0])*(point[0]-lastPoint[0])+(point[1]-lastPoint[1])*(point[1]-lastPoint[1]));
             lastPoint = point;
+        }
+
+        if (this.p < 1.00) { // while we didn't fully draw the line
+            this.p += 0.01 / totalDist; // increase the "progress" of the animation
+        } else {
+            this.p = 0;
         }
 
         const amps = [
