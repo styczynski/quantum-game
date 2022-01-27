@@ -36,7 +36,7 @@
     "karma-phantomjs-launcher": "1.0.4",
     "karma-webpack": "3.0.0",
     "source-map-loader": "0.2.3",
-    "three": "^0.107.0",
+    "three": "^0.137.0",
     "tslint": "5.17.0",
     "tslint-loader": "3.6.0",
     "typescript": "3.5.1",
